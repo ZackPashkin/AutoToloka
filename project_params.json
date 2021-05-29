@@ -1,0 +1,84 @@
+{
+  "public_name": "Цвет слона",
+  "public_description": "Какого цвета слон на картинке?",
+  "public_instructions": "<p>Рассмотрите изображение и определите цвет слона.</p> Картинку можно увеличить или уменьшить при помощи кнопок:</p> <img src=\"disc/img1.png>\"",
+  "private_comment": "Мой первый проект",
+  "task_spec": {
+    "input_spec": {
+      "image": {
+        "type": "url",
+        "required": true,
+        "hidden": false
+      }
+    },
+    "output_spec": {
+      "result": {
+        "type": "string",
+        "required": true,
+        "hidden": false                
+      }
+    },
+    "view_spec": {
+      "assets": {
+        "script_urls": ["library1.js", "library2.js"]
+      },
+      "markup": "<код интерфейса задания>",
+      "script": "<код JavaScript>",
+      "styles": "<код CSS>",
+      "settings": {
+        "showSkip": true,
+        "showTimer": true,
+        "showTitle": true,
+        "showSubmit": true,
+        "showFullscreen": true,
+        "showInstructions": true,
+        "showFinish": true,
+        "showMessage": true,
+        "showReward": true
+      }
+    }
+  },
+  "assignments_issuing_type": "AUTOMATED",
+  "assignments_automerge_enabled": false,
+  "max_active_assignments_count": 15,
+  "quality_control": {
+    "configs": [{
+      "collector_config": {
+        "type": "SKIPPED_IN_ROW_ASSIGNMENTS"
+      },
+      "rules": [{
+        "conditions": [{
+          "key": "skipped_in_row_count",
+          "operator": "GTE",
+          "value": 10
+        }],
+        "action": {
+          "type": "REJECT_ALL_ASSIGNMENTS",
+          "parameters": {
+            "public_comment": "Пропущено более 10 страниц подряд"
+          }
+        }
+      }]
+    }]
+  },
+  "localization_config": {
+    "default_language": "RU",
+    "additional_languages": [
+      {
+        "language": "EN",
+        "public_name": {
+          "value": "Elephant color",
+          "source": "REQUESTER"
+        },
+        "public_description": {
+          "value": "What color is the elephant in the picture?",
+          "source": "REQUESTER"
+        },
+        "public_instructions": {
+          "value": "<p>Look at the image and determine the color of the elephant.</p> The image can be enlarged or reduced using the buttons:</p> <img src=\"disc/img1.png>\"",
+          "source": "REQUESTER"
+        }
+      }
+    ]
+  }
+}
