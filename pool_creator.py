@@ -17,6 +17,7 @@ class PoolCreator:
                      'will_expire': will_expire,
                      'reward_per_assignment': reward_per_assignment,
                      'assignment_max_duration_seconds': assignment_max_duration_seconds,
+                     'auto_accept_solutions': 'false',
                      'defaults': defaults}
         if optional_params is not None:
             for k, v in optional_params.items():

@@ -45,6 +45,15 @@ class TolokaProjectHandler:
         if req.ok:
             print('The project was successfully updated')
 
+    def update_pool(self, pool_id, params_dict):
+        pool_ids = [int(item[0]) for item in self.get_pools_params()]
+        wanted_json = self.get_pools_params(return_ids=False)[pool_ids.index(pool_id)]
+        for k, v in params_dict.items():
+            wanted_json[k] = v
+        req = requests.put(self.url + f'pools/{pool_id}', headers=self.headers, json=wanted_json)
+        if req.ok:
+            print('The project was successfully updated')
+
     def create_toloka_pool(self, sandbox=True, pool_from_file=False, pool_params=None):
         if pool_from_file:
             with open('pool_params.json', 'r', encoding='utf-8') as file:
@@ -65,7 +74,7 @@ class TolokaProjectHandler:
         if req.ok:
             output = req.json()['items']
             if return_ids:
-                return [[item['id'], item['status']] for item in req.json()['items']]
+                return [[item['id'], item['status'], item['private_name']] for item in req.json()['items']]
             return req.json()['items']
 
     def open_close_pool(self, pool_id, type: str):
@@ -90,6 +99,8 @@ if __name__ == '__main__':
     # handler.update_toloka_project(64894)
     # pool = handler.create_toloka_pool()
     # handler.open_close_pool(handler.get_pools_params(), 'close')
-    print(*handler.get_pools_params())
     # handler.create_toloka_pool(pool_params=PoolCreator(handler.project_id).pool)
-    # handler.archive_object('pool', 879560)
+    # print(json.dumps(handler.get_pools_params(return_ids=False), indent=4, ensure_ascii=False))
+    # handler.update_pool(889277, params_dict={'auto_accept_solutions': 'false'})
+    # req = requests.get(handler.url + 'tasks?pool_id=872811', headers=handler.headers)
+    # print(json.dumps(req.json(), indent=4))
