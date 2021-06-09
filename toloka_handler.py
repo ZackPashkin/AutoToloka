@@ -8,16 +8,12 @@ from task_creator import TaskCreator, TaskSuiteCreator
 
 
 class TolokaProjectHandler:
-    def __init__(self, ouath_token, project_id=None, sandbox=True, verbose=True):
+    def __init__(self, ouath_token, project_id=None, sandbox=True, verbose=True, project_params_path=None):
         self.sandbox = sandbox
         self.verbose = verbose
         self.url = 'https://sandbox.toloka.yandex.ru/api/v1/' if sandbox else 'https://toloka.yandex.ru/api/v1/'
         self.oauth_token = ouath_token
         self.headers = {"Authorization": "OAuth " + self.oauth_token}
-        with open('project_params.json', 'r', encoding='utf-8') as file:
-            self.project_params = json.load(file)
-        # with open('pool_params.json', 'r', encoding='utf-8') as file:
-        #     self.pool_params = json.load(file)
         if project_id is not None:
             self.project_id = project_id
         else:
@@ -30,15 +26,17 @@ class TolokaProjectHandler:
                 if input_id in [item[0] for item in available_proj_ids]:
                     self.project_id = int(input_id)
                     flag = False
-                elif input_id.lower() == 'new':
-                    self.project_id = self.create_toloka_project()
+                elif input_id.lower() == 'new' and project_params_path is not None:
+                    self.project_id = self.create_toloka_project(project_params_path)
                     flag = False
 
     def print_json(self, item, indent=4):
         print(json.dumps(item, indent=indent, ensure_ascii=False))
 
-    def create_toloka_project(self):
-        req = requests.post(self.url + 'projects', headers=self.headers, json=self.project_params)
+    def create_toloka_project(self, project_params_path='project_params.json'):
+        with open(project_params_path, 'r', encoding='utf-8') as file:
+            project_params = json.load(file)
+        req = requests.post(self.url + 'projects', headers=self.headers, json=project_params)
         assert req.ok
         new_project_id = req.json()['id']
         if self.verbose:
@@ -166,17 +164,17 @@ class TolokaProjectHandler:
 
 if __name__ == '__main__':
     Greg, Arina = 'AQAAAABVFx8TAAIbuv-O6f5F5UdQpaujoE7VnNk', 'AQAAAAAOLepkAAIbukKmFBAvCkpluhXdXMFEyzo'
-    handler = TolokaProjectHandler(Greg, project_id=64894)
+    handler = TolokaProjectHandler(Greg, project_id=66187)
     # handler.update_toloka_project('project_params_2.json')
     # handler.get_project_params()
     # project = handler.create_toloka_project()
-    # handler.archive_object('project', 66184)
+    handler.archive_object('project', 66187)
     # handler.update_toloka_project(64894)
     # pool = handler.create_toloka_pool()
     # handler.open_close_pool(handler.get_pools_params(), 'close')
     # handler.create_toloka_pool(pool_from_file=False, private_name='Test Pool 1')
-    handler.get_pools_params(less_info=False)
-    # handler.get_toloka_task_suites(900565)
+    # handler.get_pools_params(less_info=False)
+    # handler.get_toloka_task_suites(900589)
     input_values = [{'image': 'https://crosti.ru/patterns/00/12/02/4835fab2d8/picture.jpg'},
                     {'image': 'https://vignette.wikia.nocookie.net/calicoswarriorsrp/images/0/05/Stumpyboy.jpg/revision/latest?cb=20181217042736'},
                     {'image': 'https://i.pinimg.com/736x/09/04/b2/0904b2000fa6b0982167e799e91e4e08.jpg'}]
