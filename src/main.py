@@ -1,4 +1,4 @@
-from toloka_handler import TolokaProjectHandler
+from src.toloka_handler import TolokaProjectHandler
 
 
 def pipeline_new_pool_with_tasks(oauth_token, pool_name, overlap=None, verbose=True, project_params_path=None):

@@ -1,10 +1,7 @@
 import requests
-import time
-import numpy as np
-import pandas as pd
 import json
-from pool_creator import PoolCreator
-from task_creator import TaskCreator, TaskSuiteCreator
+from src.pool_creator import PoolCreator
+from src.task_creator import TaskCreator, TaskSuiteCreator
 
 
 class TolokaProjectHandler:
@@ -168,12 +165,12 @@ if __name__ == '__main__':
     # handler.update_toloka_project('project_params_2.json')
     # handler.get_project_params()
     # project = handler.create_toloka_project()
-    handler.archive_object('project', 66187)
+    # handler.archive_object('project', 66187)
     # handler.update_toloka_project(64894)
     # pool = handler.create_toloka_pool()
     # handler.open_close_pool(handler.get_pools_params(), 'close')
     # handler.create_toloka_pool(pool_from_file=False, private_name='Test Pool 1')
-    # handler.get_pools_params(less_info=False)
+    handler.get_pools_params(less_info=False)
     # handler.get_toloka_task_suites(900589)
     input_values = [{'image': 'https://crosti.ru/patterns/00/12/02/4835fab2d8/picture.jpg'},
                     {'image': 'https://vignette.wikia.nocookie.net/calicoswarriorsrp/images/0/05/Stumpyboy.jpg/revision/latest?cb=20181217042736'},
