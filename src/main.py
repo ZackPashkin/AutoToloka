@@ -17,5 +17,5 @@ def pipeline_for_new_project(oauth_token, project_params_path, verbose=True):
 
 if __name__ == '__main__':
     Greg, Arina = 'AQAAAABVFx8TAAIbuv-O6f5F5UdQpaujoE7VnNk', 'AQAAAAAOLepkAAIbukKmFBAvCkpluhXdXMFEyzo'
-    pipeline_new_pool_with_tasks(Greg, 'Test pool 3', overlap=2, verbose=False, project_params_path='project_params_2.json')
-    # pipeline_for_new_project(Greg, project_params_path='project_params_2.json')
+    # pipeline_new_pool_with_tasks(Greg, 'Test pool 3', overlap=2, verbose=False, project_params_path='project_params_2.json')
+    pipeline_for_new_project(Greg, project_params_path='project_params_2.json')

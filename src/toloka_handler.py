@@ -137,6 +137,9 @@ class TolokaProjectHandler:
                 TaskSuiteCreator(pool_id, input_values).task_suite
             addition = 'tasks' if object == 'task' else 'task-suites'
             req = requests.post(self.url + f'{addition}?allow_defaults=true', headers=self.headers, json=object)
+            if self.verbose:
+                print(req)
+                self.print_json(req.json())
             if req.ok:
                 return req.json()['id']
 
@@ -154,26 +157,34 @@ class TolokaProjectHandler:
             print(f'Overlap in {object_type} successfully changed')
 
     def stop_showing_task_suite(self, suite_id):
-        pass
+        req = requests.patch(self.url + f'task-suites/{suite_id}/set-overlap-or-min', headers=self.headers,
+                             json={'overlap': 0})
+        if self.verbose:
+            print(req)
+            self.print_json(req.json())
+        if req.ok:
+            print(f'Task-suite {suite_id} successfully stopped')
 
 
 # Greg Project: 64894
 
 if __name__ == '__main__':
     Greg, Arina = 'AQAAAABVFx8TAAIbuv-O6f5F5UdQpaujoE7VnNk', 'AQAAAAAOLepkAAIbukKmFBAvCkpluhXdXMFEyzo'
-    handler = TolokaProjectHandler(Greg, project_id=66187)
+    handler = TolokaProjectHandler(Greg, project_id=66571)
     # handler.update_toloka_project('project_params_2.json')
     # handler.get_project_params()
     # project = handler.create_toloka_project()
-    # handler.archive_object('project', 66187)
+    handler.archive_object('project', 66572)
     # handler.update_toloka_project(64894)
     # pool = handler.create_toloka_pool()
     # handler.open_close_pool(handler.get_pools_params(), 'close')
-    # handler.create_toloka_pool(pool_from_file=False, private_name='Test Pool 1')
-    handler.get_pools_params(less_info=False)
-    # handler.get_toloka_task_suites(900589)
-    input_values = [{'image': 'https://crosti.ru/patterns/00/12/02/4835fab2d8/picture.jpg'},
-                    {'image': 'https://vignette.wikia.nocookie.net/calicoswarriorsrp/images/0/05/Stumpyboy.jpg/revision/latest?cb=20181217042736'},
-                    {'image': 'https://i.pinimg.com/736x/09/04/b2/0904b2000fa6b0982167e799e91e4e08.jpg'}]
-    # handler.create_task_or_suite(900352, 'task-suite', input_values)
-    # handler.change_object_overlap('00000dbd00--60c01f5ae7a2eb796ef5002b', 1, 'task-suite')
+    # new_pool_id = handler.create_toloka_pool(pool_from_file=False, private_name='Test Pool 1')
+    # handler.get_pools_params(less_info=True)
+    # handler.get_toloka_task_suites(731493)
+    # handler.stop_showing_task_suite('00000dbd00--60c8b7d43ab5f1597a056fdc')
+    input_values = [{'image': 'https://bugaga.ru/uploads/posts/2017-03/1489052030_kotik-hosiko-12.jpg'},
+                    {'image': 'https://petstory.ru/resize/800x800x80/upload/images/news/samye-milye-blogery-13-zvezdnykh-kotov-instagrama/hosico_cat-1.jpg'},
+                    {'image': 'https://sun9-27.userapi.com/c857720/v857720083/219d40/iXGXxqMZhR4.jpg'}]
+    # new_task_id = handler.create_task_or_suite(905757, 'task-suite', input_values)
+    # print(new_task_id)
+    # handler.change_object_overlap(new_task_id, 1, 'task-suite')
