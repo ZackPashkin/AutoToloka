@@ -16,7 +16,9 @@ class TolokaProjectHandler:
         else:
             ask_for_project_id = requests.get(self.url + 'projects', headers=self.headers)
             available_proj_ids = [[item['id'], item['status']] for item in ask_for_project_id.json()['items']]
-            print(*available_proj_ids, sep='\n')
+            for proj in available_proj_ids:
+                if proj[1] != 'ARCHIVED':
+                    print(proj)
             flag = True
             while flag:
                 input_id = input('Please, type in one of available project IDs (for new project type "NEW"): ')
@@ -89,7 +91,11 @@ class TolokaProjectHandler:
                          f'Pool status: {item["status"]}',
                          f'Pool name: {item["private_name"]}',
                          f'Project ID: {item["project_id"]}'] for item in output]
-                self.print_json(to_print)
+                final_print = []
+                for item in to_print:
+                    if 'archive' not in item[1].lower():
+                        final_print.append(item)
+                self.print_json(final_print)
                 return to_print
             else:
                 self.print_json(output)
@@ -174,17 +180,20 @@ if __name__ == '__main__':
     # handler.update_toloka_project('project_params_2.json')
     # handler.get_project_params()
     # project = handler.create_toloka_project()
-    handler.archive_object('project', 66572)
+    # handler.archive_object('pool', 905878)
     # handler.update_toloka_project(64894)
     # pool = handler.create_toloka_pool()
     # handler.open_close_pool(handler.get_pools_params(), 'close')
-    # new_pool_id = handler.create_toloka_pool(pool_from_file=False, private_name='Test Pool 1')
-    # handler.get_pools_params(less_info=True)
+    # new_pool_id = handler.create_toloka_pool(pool_from_file=False, private_name='Test Pool 3')
+    handler.get_pools_params(less_info=True)
     # handler.get_toloka_task_suites(731493)
     # handler.stop_showing_task_suite('00000dbd00--60c8b7d43ab5f1597a056fdc')
-    input_values = [{'image': 'https://bugaga.ru/uploads/posts/2017-03/1489052030_kotik-hosiko-12.jpg'},
-                    {'image': 'https://petstory.ru/resize/800x800x80/upload/images/news/samye-milye-blogery-13-zvezdnykh-kotov-instagrama/hosico_cat-1.jpg'},
-                    {'image': 'https://sun9-27.userapi.com/c857720/v857720083/219d40/iXGXxqMZhR4.jpg'}]
-    # new_task_id = handler.create_task_or_suite(905757, 'task-suite', input_values)
+    input_values = [{'image': '/barkev2009/bears.jpg',
+                     'path': 'image'},
+                    {'image': '/barkev2009/moscow.jpg',
+                     'path': 'image'},
+                    {'image': '/barkev2009/winter.jpg',
+                     'path': 'image'}]
+    # new_task_id = handler.create_task_or_suite(new_pool_id, 'task-suite', input_values)
     # print(new_task_id)
     # handler.change_object_overlap(new_task_id, 1, 'task-suite')

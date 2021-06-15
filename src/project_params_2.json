@@ -4,8 +4,13 @@
     "public_instructions": "Bla-bla-bla",
     "task_spec": {
         "input_spec": {
+            "path": {
+                "type": "string",
+                "hidden": false,
+                "required": false
+            },
             "image": {
-                "type": "url",
+                "type": "string",
                 "hidden": false,
                 "required": true
             }
@@ -32,10 +37,11 @@
                 "plugin.toloka": "1.1.8",
                 "plugin.hotkeys": "1.0.8",
                 "field.radio-group": "1.1.10",
-                "condition.required": "1.1.5"
+                "condition.required": "1.1.5",
+                "@yandex-toloka/helper.proxy": "1.0.7"
             },
             "type": "tb",
-            "config": "{\n  \"view\": {\n    \"type\": \"view.list\",\n    \"items\": [\n      {\n        \"type\": \"view.text\",\n        \"content\": \"Посмотрите на картинку и ответьте на вопрос.\"\n      },\n      {\n        \"type\": \"view.image\",\n        \"url\": {\n          \"type\": \"data.input\",\n          \"path\": \"image\"\n        }\n      },\n      {\n        \"type\": \"field.radio-group\",\n        \"label\": \"Какое у кота настроение?\",\n        \"options\": [\n          {\n            \"label\": \"Плохое\",\n            \"value\": \"bad\"\n          },\n          {\n            \"label\": \"Хорошее\",\n            \"value\": \"ok\"\n          },\n          {\n            \"label\": \"Ошибка 404\",\n            \"value\": \"error\"\n          }\n        ],\n        \"data\": {\n          \"type\": \"data.output\",\n          \"path\": \"result\"\n        },\n        \"validation\": {\n          \"type\": \"condition.required\"\n        }\n      }\n    ]\n  },\n  \"plugins\": [\n    {\n      \"1\": {\n        \"type\": \"action.set\",\n        \"data\": {\n          \"type\": \"data.output\",\n          \"path\": \"result\"\n        },\n        \"payload\": \"bad\"\n      },\n      \"2\": {\n        \"type\": \"action.set\",\n        \"data\": {\n          \"type\": \"data.output\",\n          \"path\": \"result\"\n        },\n        \"payload\": \"ok\"\n      },\n      \"3\": {\n        \"type\": \"action.set\",\n        \"data\": {\n          \"type\": \"data.output\",\n          \"path\": \"result\"\n        },\n        \"payload\": \"error\"\n      },\n      \"type\": \"plugin.hotkeys\"\n    },\n    {\n      \"type\": \"plugin.toloka\",\n      \"layout\": {\n        \"kind\": \"scroll\",\n        \"taskWidth\": 500\n      }\n    }\n  ]\n}",
+            "config": "{\n  \"view\": {\n    \"type\": \"view.list\",\n    \"items\": [\n      {\n        \"type\": \"view.text\",\n        \"content\": \"Посмотрите на картинку и ответьте на вопрос.\"\n      },\n      {\n        \"type\": \"view.image\",\n        \"url\": {\n          \"type\": \"@yandex-toloka/helper.proxy\",\n          \"path\": {\n            \"type\": \"data.input\",\n            \"path\": \"image\"\n          }\n        }\n      },\n      {\n        \"type\": \"field.radio-group\",\n        \"label\": \"Какое у кота настроение?\",\n        \"options\": [\n          {\n            \"label\": \"Плохое\",\n            \"value\": \"bad\"\n          },\n          {\n            \"label\": \"Хорошее\",\n            \"value\": \"ok\"\n          },\n          {\n            \"label\": \"Ошибка 404\",\n            \"value\": \"error\"\n          }\n        ],\n        \"data\": {\n          \"type\": \"data.output\",\n          \"path\": \"result\"\n        },\n        \"validation\": {\n          \"type\": \"condition.required\"\n        }\n      }\n    ]\n  },\n  \"plugins\": [\n    {\n      \"1\": {\n        \"type\": \"action.set\",\n        \"data\": {\n          \"type\": \"data.output\",\n          \"path\": \"result\"\n        },\n        \"payload\": \"bad\"\n      },\n      \"2\": {\n        \"type\": \"action.set\",\n        \"data\": {\n          \"type\": \"data.output\",\n          \"path\": \"result\"\n        },\n        \"payload\": \"ok\"\n      },\n      \"3\": {\n        \"type\": \"action.set\",\n        \"data\": {\n          \"type\": \"data.output\",\n          \"path\": \"result\"\n        },\n        \"payload\": \"error\"\n      },\n      \"type\": \"plugin.hotkeys\"\n    },\n    {\n      \"type\": \"plugin.toloka\",\n      \"layout\": {\n        \"kind\": \"scroll\",\n        \"taskWidth\": 500\n      }\n    }\n  ]\n}",
             "settings": {
                 "showSkip": true,
                 "showTimer": true,
