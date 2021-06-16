@@ -2,6 +2,7 @@ import requests
 import json
 from src.pool_creator import PoolCreator
 from src.task_creator import TaskCreator, TaskSuiteCreator
+from yadisk import YaDisk
 
 
 class TolokaProjectHandler:
@@ -139,15 +140,27 @@ class TolokaProjectHandler:
 
     def create_task_or_suite(self, pool_id, object=None, input_values=None):
         if input_values is not None:
-            object = TaskCreator(pool_id, input_values).task if object == 'task' else \
+            object_creator = TaskCreator(pool_id, input_values).task if object == 'task' else \
                 TaskSuiteCreator(pool_id, input_values).task_suite
             addition = 'tasks' if object == 'task' else 'task-suites'
-            req = requests.post(self.url + f'{addition}?allow_defaults=true', headers=self.headers, json=object)
+            req = requests.post(self.url + f'{addition}?allow_defaults=true', headers=self.headers, json=object_creator)
             if self.verbose:
                 print(req)
                 self.print_json(req.json())
             if req.ok:
+                print(f'{object.title()} {req.json()["id"]} successfully created')
                 return req.json()['id']
+
+    def create_task_suite_from_yadisk_proxy(self, pool_id, proxy_name, object=None, yatoken='AQAAAABVFx8TAAct8vFchXtyMETKokrzk1Q10XY'):
+        y = YaDisk(token=yatoken)
+        photos = [file.name for file in list(y.listdir(f'Приложения/Toloka.Sandbox/{proxy_name}'))]
+        input_values = [{'image': f'/{proxy_name}/{photo}',
+                         'path': 'image'}for photo in photos]
+        if self.verbose:
+            print(f'Photos from {proxy_name}: ')
+            self.print_json(input_values)
+        task_id = self.create_task_or_suite(pool_id, object=object, input_values=input_values)
+        return task_id
 
     def change_object_overlap(self, object_id, overlap=None, object_type=None, infinite_overlap=False):
         if object_type is not None:
@@ -180,12 +193,12 @@ if __name__ == '__main__':
     # handler.update_toloka_project('project_params_2.json')
     # handler.get_project_params()
     # project = handler.create_toloka_project()
-    # handler.archive_object('pool', 905878)
+    handler.archive_object('pool', 906325)
     # handler.update_toloka_project(64894)
     # pool = handler.create_toloka_pool()
     # handler.open_close_pool(handler.get_pools_params(), 'close')
-    # new_pool_id = handler.create_toloka_pool(pool_from_file=False, private_name='Test Pool 3')
-    handler.get_pools_params(less_info=True)
+    new_pool_id = handler.create_toloka_pool(pool_from_file=False, private_name='Test Pool YaDisk')
+    # handler.get_pools_params(less_info=True)
     # handler.get_toloka_task_suites(731493)
     # handler.stop_showing_task_suite('00000dbd00--60c8b7d43ab5f1597a056fdc')
     input_values = [{'image': '/barkev2009/bears.jpg',
@@ -194,6 +207,8 @@ if __name__ == '__main__':
                      'path': 'image'},
                     {'image': '/barkev2009/winter.jpg',
                      'path': 'image'}]
+    new_task_id = handler.create_task_suite_from_yadisk_proxy(new_pool_id, 'segm-photos', object='task-suite')
+    print(new_task_id)
     # new_task_id = handler.create_task_or_suite(new_pool_id, 'task-suite', input_values)
     # print(new_task_id)
     # handler.change_object_overlap(new_task_id, 1, 'task-suite')
