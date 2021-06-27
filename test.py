@@ -25,8 +25,11 @@ def get_token(id, password):
 
 
 y = YaDisk(token='AQAAAABVFx8TAAct8vFchXtyMETKokrzk1Q10XY')
-files = list(y.listdir('Приложения/Toloka.Sandbox/autotoloka'))
-print([file.name for file in list(y.listdir('Приложения/Toloka.Sandbox/autotoloka'))])
+# files = list(y.listdir('Приложения/Toloka.Sandbox/autotoloka'))
+# print([file.name for file in list(y.listdir('Приложения/Toloka.Sandbox/autotoloka'))])
+a = list(range(100))
+print(a[::10])
+
 # for file in files:
 #     print(file.name)
 # y.remove('requirements.txt')
