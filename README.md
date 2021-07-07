@@ -4,9 +4,11 @@ You can install the library by two methods.
 
 ## Method 1
 
+### Open dist directory 
+
 ### Download .whl
 ```bash
-[.whl](https://drive.google.com/drive/u/0/my-drive)
+Download "autotoloka_test-0.0.1-py3-none-any.whl" file
 ```
 
 ### Install library
