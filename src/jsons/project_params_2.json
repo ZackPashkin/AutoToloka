@@ -1,0 +1,58 @@
+{
+    "public_name": "Сегментация",
+    "public_description": "Выделить области на картинке",
+    "public_instructions": "Для выделения области кликните один раз, чтобы создать область, второй - чтобы ее закрыть.",
+    "task_spec": {
+        "input_spec": {
+            "path": {
+                "type": "string",
+                "hidden": false,
+                "required": false
+            },
+            "image": {
+                "type": "string",
+                "hidden": false,
+                "required": true
+            }
+        },
+        "output_spec": {
+            "result": {
+                "type": "array_json",
+                "hidden": false,
+                "required": true
+            }
+        },
+        "view_spec": {
+            "lock": {
+                "core": "1.7.0",
+                "plugin.toloka": "1.1.8",
+                "condition.required": "1.1.5",
+                "field.image-annotation": "1.3.8",
+                "@yandex-toloka/helper.proxy": "1.0.7"
+            },
+            "type": "tb",
+            "config": "{\n  \"view\": {\n    \"type\": \"field.image-annotation\",\n    \"image\": {\n      \"type\": \"@yandex-toloka/helper.proxy\",\n      \"path\": {\n        \"type\": \"data.input\",\n        \"path\": \"image\"\n      }\n    },\n    \"fullHeight\": true,\n    \"data\": {\n      \"type\": \"data.output\",\n      \"path\": \"result\"\n    },\n    \"shapes\": {\n      \"rectangle\": true\n    },\n    \"validation\": {\n      \"type\": \"condition.required\"\n    }\n  },\n  \"plugins\": [\n    {\n      \"type\": \"plugin.toloka\",\n      \"layout\": {\n        \"kind\": \"pager\"\n      }\n    }\n  ]\n}",
+            "settings": {
+                "showSkip": true,
+                "showTimer": true,
+                "showTitle": true,
+                "showFinish": true,
+                "showReward": true,
+                "showSubmit": true,
+                "permissions": [],
+                "showMessage": true,
+                "showFullscreen": true,
+                "showInstructions": true
+            },
+            "localizationConfig": {
+                "keys": []
+            }
+        }
+    },
+    "assignments_issuing_type": "AUTOMATED",
+    "assignments_automerge_enabled": false,
+    "localization_config": {
+        "default_language": "RU",
+        "additional_languages": []
+    }
+}

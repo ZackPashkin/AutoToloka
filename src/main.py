@@ -54,5 +54,5 @@ if __name__ == '__main__':
     Greg, Arina = 'AQAAAABVFx8TAAIbuv-O6f5F5UdQpaujoE7VnNk', 'AQAAAAAOLepkAAIbukKmFBAvCkpluhXdXMFEyzo'
     # pipeline_new_pool_with_tasks(Greg, 'Test pool 4', overlap=1, verbose=False, project_params_path='project_params_2.json')
     pipeline_new_pool_with_tasks_from_yadisk_proxy(Greg, 'New Pool YaDisk', 'segm-photos', verbose=False,
-                                                   project_params_path='project_params_2.json')
+                                                   project_params_path='jsons/project_params_2.json')
     # pipeline_for_new_project(Greg, project_params_path='project_params_2.json')
