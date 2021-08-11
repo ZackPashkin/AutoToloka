@@ -10,9 +10,6 @@ DESCRIPTION = 'library for hosting and controlling tasks for Y.Toloka'
 INSTALL_REQUIRES = ['requests>=2.25.1', 'numpy>=1.20.3', 'Pillow>=8.2.0', 'pandas>=1.2.4', ]
 
 
-
-
-
 # Setting up
 setup(
     name="autotoloka",
