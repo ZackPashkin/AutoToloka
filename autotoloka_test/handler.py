@@ -1,8 +1,8 @@
 import requests
 import json
-from .create_pool import PoolCreator
-from .create_task import TaskCreator, TaskSuiteCreator
-from .utils import get_chunks
+from src.pool_creator import PoolCreator
+from src.task_creator import TaskCreator, TaskSuiteCreator
+from src.utils import get_chunks
 from yadisk import YaDisk
 
 
@@ -10,6 +10,7 @@ class TolokaProjectHandler:
     """
     Creates a class to handle all Toloka operations
     """
+
     def __init__(self, ouath_token, project_id=None, sandbox=True, verbose=True, project_params_path=None):
         self.sandbox = sandbox
         self.verbose = verbose
@@ -89,16 +90,20 @@ class TolokaProjectHandler:
         if req.ok:
             self.print_json(req.json())
 
-    def create_toloka_pool(self, pool_from_file=False, **kwargs):
+    def create_toloka_pool(self, pool_from_file=False, file_name=None, **kwargs):
         '''
         Creates Toloka pool by dictionary-stored or file-based configurations
+        :param file_name:
         :param pool_from_file: configuration file path
         :param kwargs:
         :return:
         '''
         if pool_from_file:
-            with open('pool_params.json', 'r', encoding='utf-8') as file:
+            with open(file_name, 'r', encoding='utf-8') as file:
                 pool_params = json.load(file)
+            pool_params['project_id'] = self.project_id
+            if 'private_name' in kwargs.keys():
+                pool_params['private_name'] = kwargs['private_name']
         else:
             pool_params = PoolCreator(self.project_id, **kwargs).pool
         req = requests.post(self.url + 'pools', headers=self.headers, json=pool_params)
@@ -129,28 +134,40 @@ class TolokaProjectHandler:
         if req.ok:
             print('The project was successfully updated')
 
-    def get_pools_params(self, less_info=True):
+    def get_pools_params(self, less_info=True, only_current_project=True):
         '''
         Prints and returns all available pools' parameters
         :param less_info:
         :return:
         '''
-        req = requests.get(self.url + 'pools', headers=self.headers)
+        req = requests.get(self.url + 'pools?limit=300&sort=id', headers=self.headers)
         if req.ok:
             output = req.json()['items']
             if less_info:
                 to_print = [[f'Pool ID: {item["id"]}',
-                         f'Pool status: {item["status"]}',
-                         f'Pool name: {item["private_name"]}',
-                         f'Project ID: {item["project_id"]}'] for item in output]
+                             f'Pool status: {item["status"]}',
+                             f'Pool name: {item["private_name"]}',
+                             f'Project ID: {item["project_id"]}'] for item in output]
                 final_print = []
                 for item in to_print:
-                    if 'archive' not in item[1].lower():
-                        final_print.append(item)
+                    if only_current_project:
+                        if 'archive' not in item[1].lower() and str(self.project_id) in item[-1]:
+                            final_print.append(item)
+                    else:
+                        if 'archive' not in item[1].lower():
+                            final_print.append(item)
                 self.print_json(final_print)
                 return to_print
             else:
-                self.print_json(output)
+                to_print = []
+                for item in output:
+                    if only_current_project:
+                        if 'archive' not in item['status'].lower() and str(self.project_id) in item['project_id']:
+                            to_print.append(item)
+                    else:
+                        if 'archive' not in item['status'].lower():
+                            to_print.append(item)
+                self.print_json(to_print)
                 return output
 
     def open_close_pool(self, pool_id, type: str):
@@ -161,7 +178,7 @@ class TolokaProjectHandler:
         :return:
         '''
         req_type = 'open' if type.lower() == 'open' else 'close'
-        output = requests.post(self.url + f'pools{pool_id}/{req_type}', headers=self.headers)
+        output = requests.post(self.url + f'pools/{pool_id}/{req_type}', headers=self.headers)
         if output.ok:
             print(f'Pool {pool_id} | Operation {req_type.upper()} successfully done')
         try:
@@ -184,7 +201,7 @@ class TolokaProjectHandler:
                 object_creator = TaskCreator(pool_id, input_values).task if object == 'task' else \
                     TaskSuiteCreator(pool_id, input_values).task_suite
             else:
-                object_creator =[]
+                object_creator = []
                 for chunk in get_chunks(input_values, by_length=True, chunk_length=tasks_on_suite):
                     chunk_creator = TaskCreator(pool_id, chunk).task if object == 'task' else \
                         TaskSuiteCreator(pool_id, chunk).task_suite
@@ -201,8 +218,7 @@ class TolokaProjectHandler:
                 except KeyError:
                     print('Task-suites successfully created')
 
-    def create_task_suite_from_yadisk_proxy(self, pool_id, proxy_name, object=None,
-                                            yatoken='AQAAAABVFx8TAAct8vFchXtyMETKokrzk1Q10XY', tasks_on_suite=10):
+    def create_task_suite_from_yadisk_proxy(self, pool_id, yatoken, proxy_name, object=None, tasks_on_suite=10):
         '''
         Creates either a Toloka task or a Toloka task-suite with data from Ya.Disk proxy-folder
         :param pool_id:
@@ -213,9 +229,15 @@ class TolokaProjectHandler:
         :return:
         '''
         y = YaDisk(token=yatoken)
+
+        selection = [{"data": {"p1": {"x": 0.472, "y": 0.413}, "p2": {"x": 0.932, "y": 0.877}}, "type": "rectangle"},
+                     {"data": [{"x": 0.143, "y": 0.807}, {"x": 0.317, "y": 0.87}, {"x": 0.511, "y": 0.145},
+                               {"x": 0.328, "y": 0.096}, {"x": 0.096, "y": 0.554}], "type": "polygon"}]
+
         photos = [file.name for file in list(y.listdir(f'Приложения/Toloka.Sandbox/{proxy_name}'))]
         input_values = [{'image': f'/{proxy_name}/{photo}',
-                         'path': 'image'}for photo in photos]
+                         'selection': selection
+                         } for photo in photos]
         if self.verbose:
             print(f'Photos from {proxy_name} ({len(input_values)} items): ')
             self.print_json(input_values)
@@ -223,7 +245,7 @@ class TolokaProjectHandler:
                                             tasks_on_suite=tasks_on_suite)
         return task_id
 
-    def get_toloka_tasks_suites(self, pool_id, object=None):
+    def get_toloka_tasks_suites(self, pool_id, object='task-suite'):
         '''
         Prints all available tasks or task-suites in the project
         :param pool_id:
@@ -235,6 +257,7 @@ class TolokaProjectHandler:
             print(req)
             if req.ok:
                 self.print_json(req.json())
+            return req.json()
 
     def archive_object(self, object_type, object_id):
         '''
@@ -284,3 +307,10 @@ class TolokaProjectHandler:
             self.print_json(req.json())
         if req.ok:
             print(f'Task-suite {suite_id} successfully stopped')
+
+    def get_answers(self, pool_id):
+        req = requests.get(self.url + f'assignments?pool_id={pool_id}', headers=self.headers)
+        if req.ok:
+            if self.verbose:
+                print(req)
+                self.print_json(req.json())
