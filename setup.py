@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 from pkg_resources import DistributionNotFound, get_distribution
 
 
-DESCRIPTION = 'library for hosting and controlling tasks for Y.Toloka'
+DESCRIPTION = 'Python library for hosting and controlling tasks of the Yandex.Toloka service.'
 
 INSTALL_REQUIRES = ['requests>=2.25.1', 'numpy>=1.20.3', 'Pillow>=8.2.0', 'pandas>=1.2.4', ]
 
