@@ -323,15 +323,15 @@ if __name__ == '__main__':
     yatoken = 'AQAAAABVFx8TAAct8n3WNOB0YUPipZmiDOHq9g4'
     handler = TolokaProjectHandler(Greg, project_id=71480)
     # handler.update_toloka_project('project_params_2.json')
-    # handler.get_project_params()
+    handler.get_project_params()
     # project = handler.create_toloka_project()
     # handler.archive_object('pool', 935460)
     # handler.archive_object('project', 71307)
     # handler.update_toloka_project(64894)
     # pool = handler.create_toloka_pool()
     # handler.open_close_pool(handler.get_pools_params(), 'close')
-    new_pool_id = handler.create_toloka_pool(pool_from_file=True, file_name='jsons/pool_params_segm.json',
-                                             private_name='Test segmentation 1')
+    # new_pool_id = handler.create_toloka_pool(pool_from_file=True, file_name='jsons/pool_params_segm.json',
+    #                                          private_name='Test segmentation 1')
     # handler.get_pools_params(less_info=True, only_current_project=True)
     # handler.open_close_pool(916437, type='open')
     # handler.get_answers(916437)
@@ -344,8 +344,8 @@ if __name__ == '__main__':
                     {'image': '/segm-photos/winter.jpg',
                      'path': 'image'}]
     # new_pool_id = 942506
-    new_task_id = handler.create_task_suite_from_yadisk_proxy(new_pool_id, yatoken, 'test-photos/test1/',
-                                                              object='task-suite', tasks_on_suite=1)
+    # new_task_id = handler.create_task_suite_from_yadisk_proxy(new_pool_id, yatoken, 'test-photos/test1/',
+    #                                                           object='task-suite', tasks_on_suite=1)
     # print(new_task_id)
     # new_task_id = handler.create_task_or_suite(new_pool_id, 'task-suite', input_values)
     # print(new_task_id)

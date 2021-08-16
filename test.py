@@ -17,11 +17,12 @@ def get_token(id, password):
 
     y.token = response.access_token
     if y.check_token():
-        print("Sucessfully received token!")
+        print("Successfully received token!")
         print(y.token)
     else:
         print("Something went wrong. Not sure how though...")
     return y.token
+
 
 def print_kwargs(**kwargs):
     print(kwargs)
