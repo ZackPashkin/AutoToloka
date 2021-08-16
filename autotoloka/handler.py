@@ -1,8 +1,8 @@
 import requests
 import json
-from autotoloka_test.create_pool import PoolCreator
-from autotoloka_test.create_task import TaskCreator, TaskSuiteCreator
-from autotoloka_test.utils import get_chunks
+from autotoloka.create_pool import PoolCreator
+from autotoloka.create_task import TaskCreator, TaskSuiteCreator
+from autotoloka.utils import get_chunks
 from yadisk import YaDisk
 
 

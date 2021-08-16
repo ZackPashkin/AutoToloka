@@ -17,7 +17,7 @@ with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as file:
 # Setting up
 setup(
     name="autotoloka",
-    version='0.0.6',
+    version='0.0.12',
     author="eftblack",
     author_email="<justlittlemin@gmail.com>",
     description=DESCRIPTION,
@@ -36,6 +36,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Operating System :: OS Independent",
-    ]
+    ],
+    include_package_data=True
 )
 

@@ -21,7 +21,7 @@ Profile -> External Services Interation -> Yandex.Disk Integration -> Add Proxy
 ### Example
 ```python
 
-from autotoloka_test import TolokaProjectHandler
+from autotoloka import TolokaProjectHandler
 
 OAUTH_TOKEN = 'your_token'
 
