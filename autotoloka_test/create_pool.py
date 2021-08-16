@@ -19,7 +19,7 @@ class PoolCreator:
                      'reward_per_assignment': reward_per_assignment,
                      'assignment_max_duration_seconds': assignment_max_duration_seconds,
                      'auto_accept_solutions': 'false',
-                     'auto_accept_period_day': 0,
+                     'auto_accept_period_day': 1,
                      'assignments_issuing_config': {
                          'issue_task_suites_in_creation_order': 'false'
                      },
