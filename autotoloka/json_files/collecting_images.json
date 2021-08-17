@@ -1,0 +1,61 @@
+{
+    "public_name": "Поиск фотографий товаров",
+    "public_description": "Найдите и загрузите фотографии товаров.",
+    "public_instructions": "",
+    "task_spec": {
+        "input_spec": {
+            "description": {
+                "type": "string",
+                "hidden": false,
+                "required": false
+            },
+            "product_title": {
+                "type": "string",
+                "hidden": false,
+                "required": true
+            }
+        },
+        "output_spec": {
+            "image": {
+                "type": "file",
+                "hidden": false,
+                "required": false
+            },
+            "no_image": {
+                "type": "boolean",
+                "hidden": false,
+                "required": true
+            }
+        },
+        "view_spec": {
+            "type": "classic",
+            "assets": {
+                "style_urls": [],
+                "script_urls": [
+                    "$TOLOKA_ASSETS/js/toloka-handlebars-templates.js"
+                ]
+            },
+            "markup": "<div class=\"product\">\n    <div class=\"section\">\n        <div class=\"section__title\">\n            наименование:\n        </div>\n        <div class=\"section__description\">\n            {{product_title}}\n            <br>\n            <a href=\"https://yandex.com/search/?text={{product_title_escaped}}\" target=\"_blank\" class=\"link link_color_orange\">\n                Яндекс.Поиск\n            </a>\n            &nbsp;\n            <a href=\"https://yandex.com/images/search?text={{product_title_escaped}}\" target=\"_blank\" class=\"link link_color_green\">\n                Яндекс.Картинки\n            </a>\n        </div>\n    </div>\n\n    <div class=\"section\">\n        <div class=\"section__title\">\n            дополнительные характеристики:\n        </div>\n        <div class=\"section__description\">\n            {{description}}\n        </div>\n    </div>\n\n    <div class=\"section\">\n        <div class=\"section__title\">\n            фото товара:\n        </div>\n        <div class=\"section__description\">\n            {{field type=\"file-img\" name=\"image\" preview=true}}\n        </div>\n    </div>\n\n    <div class=\"section\">\n        <div class=\"section__title\">\n        </div>\n        <div class=\"section__description\">\n            {{field type=\"checkbox\" label=\"Фото не найдено\" name=\"no_image\"}}\n        </div>\n    </div>\n</div>\n",
+            "script": "exports.Task = extend(TolokaHandlebarsTask, function (options) {\n  TolokaHandlebarsTask.call(this, options);\n}, {\n  validate: function(solution) {\n    if (!solution.output_values.image && !solution.output_values.no_image) {\n      return {\n        task_id: this.getTask().id,\n        errors: {\n          '__TASK__': {\n            message: \"Не загружено фото или не отмечено его отсутствие\"\n          }\n        }\n      };\n    } else {\n      return TolokaHandlebarsTask.prototype.validate.apply(this, arguments);\n    }\n  },\n  getTemplateData: function () {\n      var data = TolokaHandlebarsTask.prototype.getTemplateData.call(this);\n\n      data.product_title_escaped = encodeURIComponent(data.product_title);\n\n      return data;\n  },\n  onRender: function() {\n    // DOM-элемент задания сформирован (доступен через #getDOMElement()) \n  },\n  onDestroy: function() {\n    // Задание завершено, можно освобождать (если были использованы) глобальные ресурсы\n  }\n});\n\nfunction extend(ParentClass, constructorFunction, prototypeHash) {\n  constructorFunction = constructorFunction || function () {};\n  prototypeHash = prototypeHash || {};\n  if (ParentClass) {\n    constructorFunction.prototype = Object.create(ParentClass.prototype);\n  }\n  for (var i in prototypeHash) {\n    constructorFunction.prototype[i] = prototypeHash[i];\n  }\n  return constructorFunction;\n}\n",
+            "styles": ".task {\n  display: block;\n}\n\n.section {\n  margin-bottom: 10px;\n  overflow: hidden;\n  width: 100%;\n}\n\n.section__title {\n  text-transform: uppercase;\n  text-align: right;\n  color: grey;\n  width: 30%;\n  float: left;\n}\n\n.section__description {\n  box-sizing: border-box;\n  padding-left: 10px;\n  width: 70%;\n  float: right;\n}\n\n@media screen and (max-width: 768px) {\n  .section__title,\n  .section__description {\n    width: 100%;\n  }\n\n  .section__title {\n    text-align: left;\n  }\n\n  .section__description {\n    padding-left: 0;\n    padding-top: 10px;\n  }\n}\n\n.link {\n  text-decoration: underline;\n}\n\n.link_color_orange {\n  color: #D8AD43;\n}\n\n.link_color_green {\n  color: #458B74;\n}\n",
+            "settings": {
+                "showSkip": true,
+                "showTimer": true,
+                "showTitle": true,
+                "showFinish": true,
+                "showReward": true,
+                "showSubmit": true,
+                "permissions": [],
+                "showMessage": true,
+                "showFullscreen": true,
+                "showInstructions": true
+            }
+        }
+    },
+    "assignments_issuing_type": "AUTOMATED",
+    "assignments_automerge_enabled": false,
+    "localization_config": {
+        "default_language": "RU",
+        "additional_languages": []
+    }
+}

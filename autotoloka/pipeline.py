@@ -11,7 +11,7 @@ def pipeline_new_pool_with_tasks(oauth_token, pool_name, overlap=None, verbose=T
     :param project_params_path:
     :return:
     '''
-    handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_path=project_params_path)
+    handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_data=project_params_path)
     new_pool_id = handler.create_toloka_pool(private_name=pool_name)
     input_values = [{'image': '/segm-photos/bears.jpg',
                      'path': 'image'},
@@ -19,7 +19,7 @@ def pipeline_new_pool_with_tasks(oauth_token, pool_name, overlap=None, verbose=T
                      'path': 'image'},
                     {'image': '/segm-photos/winter.jpg',
                      'path': 'image'}]
-    new_suite_id = handler.create_task_or_suite(new_pool_id, object='task-suite', input_values=input_values)
+    new_suite_id = handler.create_task_suite(new_pool_id, object='task-suite', input_values=input_values)
     if overlap is not None:
         handler.change_task_suite_overlap(new_suite_id, overlap=overlap, object_type='task-suite')
 
@@ -35,7 +35,7 @@ def pipeline_new_pool_with_tasks_from_yadisk_proxy(oauth_token, pool_name, proxy
     :param project_params_path:
     :return:
     '''
-    handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_path=project_params_path)
+    handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_data=project_params_path)
     new_pool_id = handler.create_toloka_pool(private_name=pool_name)
     new_suite_id = handler.create_task_suite_from_yadisk_proxy(new_pool_id, proxy_name, object='task-suite')
 
@@ -48,4 +48,4 @@ def pipeline_for_new_project(oauth_token, project_params_path, verbose=True):
     :param verbose:
     :return:
     '''
-    handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_path=project_params_path)
+    handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_data=project_params_path)

@@ -22,56 +22,57 @@ Profile -> External Services Interation -> Yandex.Disk Integration -> Add Proxy
 ```python
 
 from autotoloka import TolokaProjectHandler
+from autotoloka.json_data import json_data
 
 OAUTH_TOKEN = 'your_token'
 
-PATH_TO_PROJECT_PARAMS = 'path_to_project_parameters'
-PATH_TO_POOL_PARAMS = 'path_to_pool_params'
+PROJECT_CONFIG = json_data['project_name']
 
 POOL_ID = 'pool_id' # ID of the created pool
 PROJECT_ID = 'project_id' # ID of the project that the pool was created for
-SUITE_ID - 'suite_id' # ID of the created suite
-TASK_ID = 'task_id' # ID of the created task
+SUITE_ID = 'suite_id' # ID of the created suite
 
 handler = TolokaProjectHandler(OAUTH_TOKEN)
 
 
 # Creates Toloka project by configuration in a given file
-handler.create_toloka_project(PATH_TO_PROJECT_PARAMS) 
+handler.create_toloka_project(PROJECT_CONFIG) 
 
 # Updates the project, obtained by the handler
-handler.update_toloka_project(PATH_TO_PROJECT_PARAMS) 
+handler.update_toloka_project(PROJECT_CONFIG) 
 
 # Prints out project parameters
 handler.get_project_params() 
 
 # Creates Toloka pool by dictionary-stored or file-based configurations
-handler.create_toloka_pool(PATH_TO_POOL_PARAMS) 
+handler.create_toloka_pool() 
 
 # Updates Toloka pool by given parameters
-handler.update_pool(PATH_TO_POOL_PARAMS) 
+handler.update_pool(POOL_ID) 
 
 # Prints and returns all available pools' parameters
 handler.get_pools_params(less_info=True, only_current_project=True) 
 
 # Opens or closes the required pool
-handler.open_close_pool(handler.get_pools_params(), 'open') # also you can close pool, then write 'close'
+handler.open_close_pool(handler.get_pools_params()) # also you can close pool, then write 'close'
 
 # Creates either a Toloka task or a Toloka task-suite by dictionary-stored input values
-handler.create_task_or_suite(POOL_ID, 'task-suite', input_values) 
+input_values = [{'key_1': 'value_1', 'key_2': 'value_2'}, 
+                {'key_1': 'value_3', 'key_2': 'value_4'}]
+handler.create_task_suite(POOL_ID, input_values) 
 
 # Creates either a Toloka task or a Toloka task-suite with data from Ya.Disk proxy-folder
 handler.create_task_suite_from_yadisk_proxy(POOL_ID, OAUTH_TOKEN, 'test-photos/test1/',
-                                              object='task-suite', tasks_on_suite=1) 
+                                              tasks_on_suite=1) 
 
 # Prints all available tasks or task-suites in the project
-handler.get_toloka_tasks_suites(POOL_ID, 'task-suite') 
+handler.get_toloka_tasks_suites(POOL_ID) 
 
 # Archives the given object by its ID and type
 handler.archive_object('project', PROJECT_ID) # also you use archive_object for pools, then you need ('pool', POOL_ID)
 
 # Changes the overlap of either the task or the task-suite, also is able to set infinite overlap
-handler.change_task_suite_overlap(TASK_ID, number_of_overlap, 'task-suite') 
+handler.change_task_suite_overlap(SUITE_ID, overlap=1) 
 
 # Sends the signal to stop showing the task-suite by its ID
 handler.stop_showing_task_suite(SUITE_ID) 
