@@ -1,11 +1,13 @@
 import requests
 import json
 import os
+import time
 from autotoloka.create_pool import PoolCreator
 from autotoloka.create_task import TaskSuiteCreator
 from autotoloka.utils import get_chunks
 from yadisk import YaDisk
 from autotoloka.json_data import json_data, path
+from sys import stdout
 
 
 class TolokaProjectHandler:
@@ -144,44 +146,51 @@ class TolokaProjectHandler:
         if response.ok:
             print('The project was successfully updated')
 
-    def get_pools_params(self, less_info=True, only_current_project=True):
+    def get_pools_params(self, pool_id=None, less_info=True, only_current_project=True):
         """
-        Prints and returns all available pools' parameters
+        Prints and returns either all available pools' parameters or certain pool's parameters (by its ID)
 
+        :param pool_id: ID of the pool, if set than only given pool's parameters are printed and returned
         :param less_info: if set to True, method prints out only pool's ID, status, name and creation date,
                             otherwise method prints all the pool parameters
         :param only_current_project: if set to True, prints out only pools from the current project
         :return: information for printing
         """
-        response = requests.get(self.url + 'pools?limit=300&sort=id', headers=self.headers)
-        if response.ok:
-            output = response.json()['items']
-            if less_info:
-                to_print = [[f'Pool ID: {item["id"]}',
-                             f'Pool status: {item["status"]}',
-                             f'Pool name: {item["private_name"]}',
-                             f'Project ID: {item["project_id"]}'] for item in output]
-                final_print = []
-                for item in to_print:
-                    if only_current_project:
-                        if 'archive' not in item[1].lower() and str(self.project_id) in item[-1]:
-                            final_print.append(item)
-                    else:
-                        if 'archive' not in item[1].lower():
-                            final_print.append(item)
-                self.print_json(final_print)
-                return final_print
-            else:
-                to_print = []
-                for item in output:
-                    if only_current_project:
-                        if 'archive' not in item['status'].lower() and str(self.project_id) in item['project_id']:
-                            to_print.append(item)
-                    else:
-                        if 'archive' not in item['status'].lower():
-                            to_print.append(item)
-                self.print_json(to_print)
-                return to_print
+        if pool_id is not None:
+            response = requests.get(self.url + f'pools/{pool_id}', headers=self.headers)
+            if self.verbose:
+                self.print_json(response.json())
+            return response.json()
+        else:
+            response = requests.get(self.url + 'pools?limit=300&sort=id', headers=self.headers)
+            if response.ok:
+                output = response.json()['items']
+                if less_info:
+                    to_print = [[f'Pool ID: {item["id"]}',
+                                 f'Pool status: {item["status"]}',
+                                 f'Pool name: {item["private_name"]}',
+                                 f'Project ID: {item["project_id"]}'] for item in output]
+                    final_print = []
+                    for item in to_print:
+                        if only_current_project:
+                            if 'archive' not in item[1].lower() and str(self.project_id) in item[-1]:
+                                final_print.append(item)
+                        else:
+                            if 'archive' not in item[1].lower():
+                                final_print.append(item)
+                    self.print_json(final_print)
+                    return final_print
+                else:
+                    to_print = []
+                    for item in output:
+                        if only_current_project:
+                            if 'archive' not in item['status'].lower() and str(self.project_id) in item['project_id']:
+                                to_print.append(item)
+                        else:
+                            if 'archive' not in item['status'].lower():
+                                to_print.append(item)
+                    self.print_json(to_print)
+                    return to_print
 
     def open_close_pool(self, pool_id):
         """
@@ -324,12 +333,14 @@ class TolokaProjectHandler:
         Prints out all the answers of the given pool
 
         :param pool_id: ID of the pool
+        :return: a json-like response
         """
         response = requests.get(self.url + f'assignments?pool_id={pool_id}', headers=self.headers)
         if response.ok:
             if self.verbose:
                 print(response)
                 self.print_json(response.json())
+            return response.json()
 
     def get_files_from_pool(self, pool_id, download_folder_name):
         """
@@ -345,15 +356,29 @@ class TolokaProjectHandler:
                 self.print_json(response.json())
             file_ids = (item['id'] for item in response.json()['items'])
             file_names = [item['name'] for item in response.json()['items']]
+            unique_file_names = {}
+
+            # Making sure that there will be no files with identical names
+            for i, file_name in enumerate(file_names):
+                if file_name[:-4] not in unique_file_names.keys():
+                    unique_file_names[file_name[:-4]] = 1
+                else:
+                    file_names[i] = f'{file_name[:-4]}_{unique_file_names[file_name[:-4]] + 1}.jpg'
+                    unique_file_names[file_name[:-4]] += 1
+
             download_path = os.path.join(os.getcwd(), download_folder_name)
 
             if download_folder_name not in os.listdir(os.getcwd()):
                 os.mkdir(download_folder_name)
+                print(f'Directory {download_folder_name} created')
 
+            print('Downloading files ... ')
             for i, id in enumerate(file_ids):
                 download = requests.get(self.url + f'attachments/{id}/download', headers=self.headers)
                 with open(os.path.join(download_path, file_names[i]), 'wb') as file:
                     file.write(download.content)
+
+            print(f'All files from pool-{pool_id} successfully downloaded into {download_path}')
 
     def accept_all_tasks(self, pool_id):
         """
@@ -388,5 +413,42 @@ class TolokaProjectHandler:
 
 if __name__ == '__main__':
     token = 'AQAAAABVFx8TAAIbupmTNSLnLE9ostJWyUWHY-M'
-    handler = TolokaProjectHandler(token, project_id=74263)
-    print(json_data)
+    collect_photos_config = json_data['collecting_images']
+    collect_photos_config['public_name'] = "Let's collect some photos!!"
+    # project_id, pool_id = 74564, 960803
+    # handler = TolokaProjectHandler(token, project_id=project_id)
+    handler = TolokaProjectHandler(token, verbose=False, project_params_data=collect_photos_config)
+    project_id = handler.project_id
+
+    pool_id = handler.create_toloka_pool(private_name='Test_Name')
+    input_values = [
+        {'product_title': 'title_1'},
+        {'product_title': 'title_2'},
+        {'product_title': 'title_3'},
+        {'product_title': 'title_4'},
+        {'product_title': 'title_5'}
+    ]
+    handler.create_task_suite(pool_id, input_values, tasks_on_suite=1)
+    closed = handler.get_pools_params(pool_id).get('last_close_reason')
+    handler.open_close_pool(pool_id)
+
+    # Progress bar parameters
+    bar, bar_length = '█', 50
+    bar_step = int(bar_length / len(input_values))
+
+    while closed != 'COMPLETED':
+        time.sleep(5)
+        closed = handler.get_pools_params(pool_id).get('last_close_reason')
+        active_tasks = handler.get_answers(pool_id)['items']
+        statuses = [task['status'] for task in active_tasks]
+        counter = statuses.count('SUBMITTED') if statuses else 0
+        stdout.write('\rPhotos uploaded: {}/{} |{}{}|'.format(counter, len(input_values),
+                                                              bar * bar_step * counter,
+                                                              '-' * bar_step * (len(input_values) - counter)))
+        stdout.flush()
+    print('')
+    handler.get_files_from_pool(pool_id, 'photos')
+    # handler.open_close_pool(pool_id)
+    handler.accept_all_tasks(pool_id)
+    handler.archive_object('pool', pool_id)
+    handler.archive_object('project', project_id)
