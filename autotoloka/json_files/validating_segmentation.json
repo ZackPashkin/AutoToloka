@@ -1,0 +1,57 @@
+{
+    "public_name": "True or False",
+    "public_description": "",
+    "public_instructions": "",
+    "task_spec": {
+        "input_spec": {
+            "image": {
+                "type": "string",
+                "hidden": false,
+                "required": true
+            },
+            "selection": {
+                "type": "json",
+                "hidden": false,
+                "required": false
+            }
+        },
+        "output_spec": {
+            "result": {
+                "type": "string",
+                "hidden": false,
+                "required": true
+            }
+        },
+        "view_spec": {
+            "type": "classic",
+            "assets": {
+                "style_urls": [],
+                "script_urls": [
+                    "$TOLOKA_ASSETS/js/toloka-handlebars-templates.js",
+                    "$TOLOKA_ASSETS/js/image-annotation.js"
+                ]
+            },
+            "markup": "<!-- редактор для выделения областей с возможностью заранее добавить область -->\r\n{{field type=\"image-annotation\" name=\"object\" src=(proxy image) annotations=selection}}\r\n\r\n<!-- кнопки для ответов -->\r\n{{field type=\"radio\" name=\"result\" value=\"OK\" label=\"Верно\" hotkey=\"1\"}}\r\n{{field type=\"radio\" name=\"result\" value=\"BAD\" label=\"Неверно\" hotkey=\"2\"}}",
+            "script": "exports.Task = extend(TolokaHandlebarsTask, function (options) {\n  TolokaHandlebarsTask.call(this, options);\n}, {\n  onRender: function() {\n    // DOM-элемент задания сформирован (доступен через #getDOMElement())  \n  },\n  onDestroy: function() {\n    // Задание завершено, можно освобождать (если были использованы) глобальные ресурсы \n  }\n});\n\nfunction extend(ParentClass, constructorFunction, prototypeHash) {\n  constructorFunction = constructorFunction || function () {};\n  prototypeHash = prototypeHash || {};\n  if (ParentClass) {\n    constructorFunction.prototype = Object.create(ParentClass.prototype);\n  }\n  for (var i in prototypeHash) {\n    constructorFunction.prototype[i] = prototypeHash[i];\n  }\n  return constructorFunction;\n}",
+            "styles": "/* скрыть кнопку для выделения полигоном */\n.image-annotation-editor__shape-polygon {\n  display: none;\n}\n\n/* настроить высоту интерфейса */\n.image-annotation-editor__annotation-layer {\n  height: max-content;\n}",
+            "settings": {
+                "showSkip": true,
+                "showTimer": true,
+                "showTitle": true,
+                "showFinish": true,
+                "showReward": true,
+                "showSubmit": true,
+                "permissions": [],
+                "showMessage": true,
+                "showFullscreen": true,
+                "showInstructions": true
+            }
+        }
+    },
+    "assignments_issuing_type": "AUTOMATED",
+    "assignments_automerge_enabled": false,
+    "localization_config": {
+        "default_language": "RU",
+        "additional_languages": []
+    }
+}
