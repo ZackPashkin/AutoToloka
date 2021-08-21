@@ -22,9 +22,9 @@ def pipeline_new_pool_with_tasks(oauth_token, pool_name, overlap=None, verbose=T
                      'path': 'image'},
                     {'image': '/segm-photos/winter.jpg',
                      'path': 'image'}]
-    new_suite_id = handler.create_task_suite(new_pool_id, object='task-suite', input_values=input_values)
+    new_suite_id = handler.create_task_suite(new_pool_id, input_values=input_values)
     if overlap is not None:
-        handler.change_task_suite_overlap(new_suite_id, overlap=overlap, object_type='task-suite')
+        handler.change_task_suite_overlap(new_suite_id, overlap=overlap)
 
 
 def pipeline_new_pool_with_tasks_from_yadisk_proxy(oauth_token, pool_name, proxy_name,
@@ -40,7 +40,7 @@ def pipeline_new_pool_with_tasks_from_yadisk_proxy(oauth_token, pool_name, proxy
     """
     handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_data=project_params_path)
     new_pool_id = handler.create_toloka_pool(private_name=pool_name)
-    new_suite_id = handler.create_task_suite_from_yadisk_proxy(new_pool_id, proxy_name, object='task-suite')
+    new_suite_id = handler.create_task_suite_from_yadisk_proxy(new_pool_id, proxy_name)
 
 
 def pipeline_for_new_project(oauth_token, project_params_path, verbose=True):
@@ -101,7 +101,6 @@ def pipeline_for_collecting_images(project_name="Let's collect some photos!", po
     print('')
     handler.get_files_from_pool(pool_id, download_folder_name)
     # handler.open_close_pool(pool_id)
-    handler.accept_all_tasks(pool_id)
-    handler.archive_object('pool', pool_id)
-    handler.archive_object('project', project_id)
-
+    # handler.accept_all_tasks(pool_id)
+    # handler.archive_object('pool', pool_id)
+    # handler.archive_object('project', project_id)

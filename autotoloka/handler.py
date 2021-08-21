@@ -8,6 +8,7 @@ from autotoloka.utils import get_chunks
 from yadisk import YaDisk
 from autotoloka.json_data import json_data, path
 from sys import stdout
+from tqdm import tqdm
 
 
 class TolokaProjectHandler:
@@ -33,7 +34,7 @@ class TolokaProjectHandler:
         if project_id is not None:
             self.project_id = project_id
         else:
-            ask_for_project_id = requests.get(self.url + 'projects', headers=self.headers)
+            ask_for_project_id = requests.get(self.url + 'projects?limit=300', headers=self.headers)
             available_proj_ids = [[item['id'],
                                    item['status'],
                                    item['public_name'],
@@ -354,7 +355,7 @@ class TolokaProjectHandler:
             if self.verbose:
                 print(response)
                 self.print_json(response.json())
-            file_ids = (item['id'] for item in response.json()['items'])
+            file_ids = [item['id'] for item in response.json()['items']]
             file_names = [item['name'] for item in response.json()['items']]
             unique_file_names = {}
 
@@ -373,10 +374,12 @@ class TolokaProjectHandler:
                 print(f'Directory {download_folder_name} created')
 
             print('Downloading files ... ')
-            for i, id in enumerate(file_ids):
+            counter = 0
+            for id in tqdm(file_ids, ncols=100, colour='green', desc='Images downloaded'):
                 download = requests.get(self.url + f'attachments/{id}/download', headers=self.headers)
-                with open(os.path.join(download_path, file_names[i]), 'wb') as file:
+                with open(os.path.join(download_path, file_names[counter]), 'wb') as file:
                     file.write(download.content)
+                counter += 1
 
             print(f'All files from pool-{pool_id} successfully downloaded into {download_path}')
 
