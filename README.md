@@ -1,5 +1,5 @@
 # **AutoToloka**
-AutoToloka is a Python library for hosting and controlling tasks of the Yandex.Toloka service 
+AutoToloka is a Python library for hosting and controlling projects of the Yandex.Toloka service 
 
 
 ## Installation
@@ -13,15 +13,18 @@ pip install -U autotoloka
 ### See video demo here
 [Docs page](https://zackpashkin.github.io/autotoloka.github.io)
 
+### Quickstart
+[Colab](https://colab.research.google.com/drive/1BYQJNkDpdGjUny-GwQeXew8jZFnyPt_Z?usp=sharing)
+
 
 ### OAuth Token
-For authorization, you need to get an OAuth token, you can get it on your Yandex.Toloka profile.
-
+For authorization, you need to get an OAuth token from your Yandex.Toloka profile.
+Go to:
 Profile -> External Services Integration -> Get OAuth token
 
 ### Proxy
-If you want to use Yandex.Disk as a storage for your images, then you need a proxy. You can add proxy on your Yandex.Toloka profile.
-
+If you want to use Yandex.Disk as a storage (recommended) for your images, you need a proxy. You can add proxy on your Yandex.Toloka profile.
+Go to:
 Profile -> External Services Interation -> Yandex.Disk Integration -> Add Proxy
 
 ### Example
