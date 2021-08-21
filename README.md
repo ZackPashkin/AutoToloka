@@ -1,6 +1,7 @@
 # **AutoToloka**
 AutoToloka is a Python library for hosting and controlling tasks of the Yandex.Toloka service 
 
+
 ## Installation
 To install the latest version from PyPI:
 ```python
@@ -8,6 +9,11 @@ pip install -U autotoloka
 ```
 
 # Getting started
+
+### See video demo here
+[Docs page](https://zackpashkin.github.io/autotoloka.github.io/)
+
+
 ### OAuth Token
 For authorization, you need to get an OAuth token, you can get it on your Yandex.Toloka profile.
 
