@@ -11,7 +11,7 @@ pip install -U autotoloka
 # Getting started
 
 ### See video demo here
-[Docs page](https://zackpashkin.github.io/autotoloka.github.io/)
+[Docs page](https://zackpashkin.github.io/autotoloka.github.io)
 
 
 ### OAuth Token
