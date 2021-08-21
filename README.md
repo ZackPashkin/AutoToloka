@@ -13,6 +13,9 @@ pip install -U autotoloka
 ### See video demo here
 [Docs page](https://zackpashkin.github.io/autotoloka.github.io)
 
+### Quickstart
+[Colab](https://colab.research.google.com/drive/1BYQJNkDpdGjUny-GwQeXew8jZFnyPt_Z?usp=sharing)
+
 
 ### OAuth Token
 For authorization, you need to get an OAuth token from your Yandex.Toloka profile.
