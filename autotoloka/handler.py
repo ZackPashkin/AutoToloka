@@ -383,22 +383,41 @@ class TolokaProjectHandler:
 
             print(f'All files from pool-{pool_id} successfully downloaded into {download_path}')
 
-    def accept_all_tasks(self, pool_id):
+    def process_all_tasks(self, pool_id, action='accept'):
         """
-        Accepts all the assignments in a given pool
+        Processes all the assignments in a given pool, accepting or rejecting them
 
+        :param action: either 'accept' or 'reject'
         :param pool_id: ID of the pool
         """
         assignments = requests.get(self.url + f'assignments?pool_id={pool_id}', headers=self.headers).json()
         assignment_ids = [item['id'] for item in assignments['items']]
-        for id in assignment_ids:
-            patch_params = {'status': 'ACCEPTED', 'public_comment': 'Well done, dude!'}
-            response = requests.patch(self.url + f'assignments/{id}', headers=self.headers, json=patch_params)
-            if response.ok:
-                print(f'Assignment {id} successfully accepted')
+        assignment_statuses = [item['status'] for item in assignments['items']]
+        for i, assignment_id in enumerate(assignment_ids):
+            if assignment_statuses[i] == 'SUBMITTED':
+                self.process_task(assignment_id, action)
             else:
-                if self.verbose:
-                    self.print_json(response.json())
+                if assignment_statuses[i] == 'REJECTED' and action == 'accept':
+                    self.process_task(assignment_id, action)
+
+    def process_task(self, assignment_id, action='accept'):
+        """
+        Processes the assignment by its ID, accepting or rejecting it
+
+        :param action: either 'accept' or 'reject'
+        :param assignment_id: ID of the assignment
+        """
+        assignment_options = {'accept': {'status': 'ACCEPTED',
+                                         'public_comment': 'Well done, dude!'},
+                              'reject': {'status': 'REJECTED',
+                                         'public_comment': 'Sorry, bro!'}}
+        patch_params = assignment_options[action]
+        response = requests.patch(self.url + f'assignments/{assignment_id}', headers=self.headers, json=patch_params)
+        if response.ok:
+            print(f'Assignment {assignment_id} successfully {action}ed')
+        else:
+            if self.verbose:
+                self.print_json(response.json())
 
     @staticmethod
     def write_config_to_json_files(config_data: dict, file_name: str):
@@ -451,7 +470,3 @@ if __name__ == '__main__':
         stdout.flush()
     print('')
     handler.get_files_from_pool(pool_id, 'photos')
-    # handler.open_close_pool(pool_id)
-    handler.accept_all_tasks(pool_id)
-    handler.archive_object('pool', pool_id)
-    handler.archive_object('project', project_id)
