@@ -100,7 +100,3 @@ def pipeline_for_collecting_images(project_name="Let's collect some photos!", po
         stdout.flush()
     print('')
     handler.get_files_from_pool(pool_id, download_folder_name)
-    # handler.open_close_pool(pool_id)
-    # handler.accept_all_tasks(pool_id)
-    # handler.archive_object('pool', pool_id)
-    # handler.archive_object('project', project_id)
