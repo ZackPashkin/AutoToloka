@@ -109,7 +109,7 @@ def pipeline_for_collecting_images(connect_to_existing_project=False, project_id
                                                               '-' * bar_step * (len(input_values) - counter)))
         stdout.flush()
     print('')
-    photo_data = handler.get_files_from_pool(pool_id, download_folder_name)
+    photo_data = handler.get_files_from_pool(pool_id, download_folder_name, reject_errors=reject_errors)
     if check_for_duplicates:
         handler.check_photos_for_duplicates(download_folder_name,
                                             reject_duplicates=accept_and_reject_after_dedup,

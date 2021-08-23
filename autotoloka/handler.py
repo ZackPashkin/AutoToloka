@@ -484,6 +484,6 @@ class TolokaProjectHandler:
 
 if __name__ == '__main__':
     token = 'AQAAAABVFx8TAAIbupmTNSLnLE9ostJWyUWHY-M'
-    handler = TolokaProjectHandler(oauth_token=token, project_id=74997)
-    pool_id = 964974
-    handler.archive_object('pool', pool_id)
+    handler = TolokaProjectHandler(oauth_token=token, project_id=75025)
+    pool_id = 965046
+    handler.archive_object('project', 75025)

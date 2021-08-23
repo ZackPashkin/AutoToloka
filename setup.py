@@ -7,12 +7,12 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 DESCRIPTION = 'Python library for hosting and controlling tasks of the Yandex.Toloka service.'
 
-INSTALL_REQUIRES = ['requests>=2.25.1',
-                    'numpy>=1.20.3',
-                    'Pillow>=8.2.0',
-                    'pandas>=1.2.4',
-                    'yadisk>=1.2.14',
-                    'imagededup',
+INSTALL_REQUIRES = ['requests==2.25.1',
+                    'numpy==1.20.3',
+                    'Pillow==8.2.0',
+                    'pandas==1.2.4',
+                    'yadisk==1.2.14',
+                    'imagededup==0.0.2',
                     'tqdm']
 
 # Reading the contents of the README.md file
@@ -23,7 +23,7 @@ with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as file:
 # Setting up
 setup(
     name="autotoloka",
-    version='0.0.17',
+    version='0.0.19',
     author="eftblack, barkev2009",
     author_email="justlittlemin@gmail.com, barkev2009@bk.ru",
     description=DESCRIPTION,
@@ -38,9 +38,6 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Operating System :: OS Independent",
     ],
     include_package_data=True
