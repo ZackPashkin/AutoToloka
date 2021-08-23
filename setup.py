@@ -12,6 +12,7 @@ INSTALL_REQUIRES = ['requests>=2.25.1',
                     'Pillow>=8.2.0',
                     'pandas>=1.2.4',
                     'yadisk>=1.2.14',
+                    'imagededup',
                     'tqdm']
 
 # Reading the contents of the README.md file
@@ -22,7 +23,7 @@ with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as file:
 # Setting up
 setup(
     name="autotoloka",
-    version='0.0.15',
+    version='0.0.16',
     author="eftblack",
     author_email="<justlittlemin@gmail.com>",
     description=DESCRIPTION,

@@ -1,10 +1,10 @@
 import requests
 import json
 import os
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from autotoloka.create_pool import PoolCreator
 from autotoloka.create_task import TaskSuiteCreator
-from autotoloka.utils import get_chunks, print_json
+from autotoloka.utils import get_chunks, print_json, check_for_duplicates
 from yadisk import YaDisk
 from autotoloka.json_data import json_data
 
@@ -13,7 +13,6 @@ class TolokaProjectHandler:
     """
     Creates a class to handle all Toloka operations
     """
-
     def __init__(self, oauth_token=None, project_id=None, is_sandbox=True, verbose=True, project_params_data=None):
         """
         Instantiates a TolokaProjectHandler class
@@ -158,7 +157,11 @@ class TolokaProjectHandler:
                 print_json(response.json())
             return response.json()
         else:
-            response = requests.get(self.url + 'pools?limit=300&sort=id', headers=self.headers)
+            if only_current_project:
+                response = requests.get(self.url + f'pools?limit=300&sort=id&project_id={self.project_id}',
+                                        headers=self.headers)
+            else:
+                response = requests.get(self.url + 'pools?limit=300&sort=id', headers=self.headers)
             if response.ok:
                 output = response.json()['items']
                 if less_info:
@@ -168,23 +171,15 @@ class TolokaProjectHandler:
                                  'Project ID': item["project_id"]} for item in output]
                     final_print = []
                     for item in to_print:
-                        if only_current_project:
-                            if 'archive' not in item['Pool status'].lower() and str(self.project_id) in item['Project ID']:
-                                final_print.append(item)
-                        else:
-                            if 'archive' not in item['Pool status'].lower():
-                                final_print.append(item)
+                        if 'archive' not in item['Pool status'].lower():
+                            final_print.append(item)
                     print_json(final_print)
                     return final_print
                 else:
                     to_print = []
                     for item in output:
-                        if only_current_project:
-                            if 'archive' not in item['status'].lower() and str(self.project_id) in item['project_id']:
-                                to_print.append(item)
-                        else:
-                            if 'archive' not in item['status'].lower():
-                                to_print.append(item)
+                        if 'archive' not in item['status'].lower():
+                            to_print.append(item)
                     print_json(to_print)
                     return to_print
 
@@ -300,6 +295,12 @@ class TolokaProjectHandler:
                     self.process_all_tasks(pool['Pool ID'], action='accept')
                     self.archive_object('pool', pool['Pool ID'])
                 self.archive_object(object_type, object_id)
+            elif response.json()['code'] == 'SUBMITTED_ASSIGNMENTS_CONFLICT':
+                self.process_all_tasks(object_id, 'accept')
+                self.archive_object(object_type, object_id)
+            elif response.json()['code'] == 'THERE_IS_REJECTED_ASSIGNMENT':
+                self.process_all_tasks(object_id, 'accept')
+                self.archive_object(object_type, object_id)
 
     def change_task_suite_overlap(self, task_suite_id, overlap=None, infinite_overlap=False):
         """
@@ -347,29 +348,52 @@ class TolokaProjectHandler:
                 print_json(response.json())
             return response.json()
 
-    def get_files_from_pool(self, pool_id, download_folder_name):
+    def get_files_from_pool(self, pool_id, download_folder_name, reject_errors=False):
         """
         Downloads all the files from the pool into a folder
 
+        :param reject_errors: reject the task if no photo was uploaded
         :param pool_id: ID of the pool
         :param download_folder_name: name of a directory to download all the files into
+        :return: photo data dictionary {assignment ID: {image ID: str, image name: str, is duplicate: bool}}
         """
-        response = requests.get(self.url + f'attachments?pool_id={pool_id}&limit=100', headers=self.headers)
+        response = requests.get(self.url + f'assignments?pool_id={pool_id}&limit=100', headers=self.headers)
         if response.ok:
             if self.verbose:
                 print(response)
                 print_json(response.json())
-            file_ids = [item['id'] for item in response.json()['items']]
-            file_names = [item['name'] for item in response.json()['items']]
+            photo_data = {}
+            assignments = response.json()['items']
+            for assignment in assignments:
+                output_values = assignment['solutions'][0]['output_values']
+                if output_values['no_image']:
+                    photo_data[assignment['id']] = None
+                else:
+                    photo_data[assignment['id']] = {'image_id': output_values['image'],
+                                                    'image_name': None,
+                                                    'is_duplicate': False}
+
+            for key in photo_data:
+                if photo_data.get(key) is None:
+                    if reject_errors:
+                        self.process_task(key, 'reject', 'no photo uploaded')
+                else:
+                    image_response = requests.get(self.url + f'attachments/{photo_data[key]["image_id"]}',
+                                                  headers=self.headers)
+                    photo_data[key]['image_name'] = image_response.json()['name']
+
             unique_file_names = {}
 
             # Making sure that there will be no files with identical names
-            for i, file_name in enumerate(file_names):
-                if file_name[:-4] not in unique_file_names.keys():
-                    unique_file_names[file_name[:-4]] = 1
-                else:
-                    file_names[i] = f'{file_name[:-4]}_{unique_file_names[file_name[:-4]] + 1}.jpg'
-                    unique_file_names[file_name[:-4]] += 1
+            for key in photo_data:
+                if photo_data[key] is not None:
+                    file_name = photo_data[key]['image_name']
+                    if file_name[:-4] not in unique_file_names.keys():
+                        unique_file_names[file_name[:-4]] = 1
+                    else:
+                        new_file_name = f'{file_name[:-4]}_{unique_file_names[file_name[:-4]] + 1}.jpg'
+                        photo_data[key]['image_name'] = new_file_name
+                        unique_file_names[file_name[:-4]] += 1
 
             download_path = os.path.join(os.getcwd(), download_folder_name)
 
@@ -378,14 +402,17 @@ class TolokaProjectHandler:
                 print(f'Directory {download_folder_name} created')
 
             print('Downloading files ... ')
-            counter = 0
-            for id in tqdm(file_ids, ncols=100, colour='green', desc='Images downloaded'):
-                download = requests.get(self.url + f'attachments/{id}/download', headers=self.headers)
-                with open(os.path.join(download_path, file_names[counter]), 'wb') as file:
-                    file.write(download.content)
-                counter += 1
+            for key in tqdm(photo_data, ncols=100, colour='green', desc='Photo data processed'):
+                if photo_data[key] is not None:
+                    file_id = photo_data[key]['image_id']
+                    download = requests.get(self.url + f'attachments/{file_id}/download', headers=self.headers)
+                    with open(os.path.join(download_path, photo_data[key]["image_name"]), 'wb') as file:
+                        file.write(download.content)
 
             print(f'All files from pool-{pool_id} successfully downloaded into {download_path}')
+            if self.verbose:
+                print_json(photo_data)
+            return photo_data
 
     def process_all_tasks(self, pool_id, action='accept'):
         """
@@ -404,27 +431,59 @@ class TolokaProjectHandler:
                 if assignment_statuses[i] == 'REJECTED' and action == 'accept':
                     self.process_task(assignment_id, action)
 
-    def process_task(self, assignment_id, action='accept'):
+    def process_task(self, assignment_id, action='accept', public_comment='generic comment'):
         """
         Processes the assignment by its ID, accepting or rejecting it
 
+        :param public_comment: public comment for the user whose task is accepted/rejected
         :param action: either 'accept' or 'reject'
         :param assignment_id: ID of the assignment
         """
         assignment_options = {'accept': {'status': 'ACCEPTED',
-                                         'public_comment': 'Well done, dude!'},
+                                         'public_comment': public_comment},
                               'reject': {'status': 'REJECTED',
-                                         'public_comment': 'Sorry, bro!'}}
+                                         'public_comment': public_comment}}
         patch_params = assignment_options[action]
         response = requests.patch(self.url + f'assignments/{assignment_id}', headers=self.headers, json=patch_params)
         if response.ok:
-            print(f'Assignment {assignment_id} successfully {action}ed')
+            print(f'Assignment {assignment_id} successfully {action}ed with public comment: {public_comment}')
+        elif response.status_code == 409 and response.json()['code'] == 'INAPPROPRIATE_STATUS':
+            print(f'Probably, the assignment {assignment_id} has already been {action}ed')
         else:
             if self.verbose:
+                print(response)
                 print_json(response.json())
+
+    def check_photos_for_duplicates(self, image_folder, reject_duplicates=False,
+                                    accept_uniques=False, photo_data=None):
+        """
+        Checks uploaded photos for duplicates and processes tasks based on the CNN results
+
+        :param image_folder: folder where uploaded images are stored
+        :param reject_duplicates: if set to True, rejects tasks where duplicates were provided
+        :param accept_uniques: if set to True, accepts tasks with uniques
+        :param photo_data: photo data dictionary from get_files_from_pool function
+        """
+        print('Checking for duplicates ...')
+        images_to_reject = check_for_duplicates(image_folder)
+        if self.verbose:
+            print_json(images_to_reject)
+        for key in photo_data:
+            if photo_data[key] is not None:
+                if photo_data[key]['image_name'] in images_to_reject:
+                    if reject_duplicates:
+                        photo_data[key]['is_duplicate'] = True
+                        comment = "It seems that this image's duplicate has already been provided by someone else"
+                        self.process_task(key, action='reject', public_comment=comment)
+                else:
+                    if accept_uniques:
+                        self.process_task(key, 'accept', 'Well done!')
+            if self.verbose:
+                print_json(photo_data)
 
 
 if __name__ == '__main__':
     token = 'AQAAAABVFx8TAAIbupmTNSLnLE9ostJWyUWHY-M'
-    handler = TolokaProjectHandler()
-    # handler.archive_object('project', 74935)
+    handler = TolokaProjectHandler(oauth_token=token, project_id=74997)
+    pool_id = 964974
+    handler.archive_object('pool', pool_id)

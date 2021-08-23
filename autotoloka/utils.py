@@ -1,6 +1,7 @@
 import json
 from autotoloka.json_data import json_data_path
 from imagededup.methods import PHash
+import os
 
 
 def get_chunks(array, chunk_number=0, by_length=False, chunk_length=0):
@@ -60,3 +61,27 @@ def check_for_duplicates(image_folder):
     phasher = PHash()
     encodings = phasher.encode_images(image_dir=image_folder)
     duplicates = phasher.find_duplicates(encoding_map=encodings)
+
+    to_delete = {}
+
+    for k, v in duplicates.items():
+        if v:
+            to_delete[k] = v
+
+    to_delete_keys = list(to_delete.keys())
+    images_to_reject = []
+
+    while to_delete_keys:
+        first = to_delete_keys.pop(0)
+        first_values = to_delete[first]
+        for value in first_values:
+            try:
+                os.remove(os.path.join(image_folder, value))
+                to_delete_keys.remove(value)
+                images_to_reject.append(value)
+            except FileNotFoundError:
+                pass
+            except ValueError:
+                pass
+
+    return images_to_reject
