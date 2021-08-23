@@ -23,9 +23,9 @@ with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as file:
 # Setting up
 setup(
     name="autotoloka",
-    version='0.0.16',
-    author="eftblack",
-    author_email="<justlittlemin@gmail.com>",
+    version='0.0.17',
+    author="eftblack, barkev2009",
+    author_email="justlittlemin@gmail.com, barkev2009@bk.ru",
     description=DESCRIPTION,
     long_description=long_description,
     long_description_content_type='text/markdown',
