@@ -1,11 +1,12 @@
 import requests
 import json
 import os
+from tqdm.notebook import tqdm
 from autotoloka.create_pool import PoolCreator
 from autotoloka.create_task import TaskSuiteCreator
-from autotoloka.utils import get_chunks
+from autotoloka.utils import get_chunks, print_json
 from yadisk import YaDisk
-from autotoloka.json_data import json_data, path
+from autotoloka.json_data import json_data
 
 
 class TolokaProjectHandler:
@@ -13,11 +14,11 @@ class TolokaProjectHandler:
     Creates a class to handle all Toloka operations
     """
 
-    def __init__(self, ouath_token, project_id=None, is_sandbox=True, verbose=True, project_params_data=None):
+    def __init__(self, oauth_token=None, project_id=None, is_sandbox=True, verbose=True, project_params_data=None):
         """
         Instantiates a TolokaProjectHandler class
 
-        :param ouath_token: Yandex.Toloka token for connecting with the API
+        :param oauth_token: Yandex.Toloka token for connecting with the API
         :param project_id: ID of the project the handler is needed for, if None - various options will be given
         :param is_sandbox: if set to True, then all the operations will be performed in Sandbox Toloka
         :param verbose: if set to True, all response logs will be printed out
@@ -26,8 +27,14 @@ class TolokaProjectHandler:
         self.sandbox = is_sandbox
         self.verbose = verbose
         self.url = 'https://sandbox.toloka.yandex.ru/api/v1/' if is_sandbox else 'https://toloka.yandex.ru/api/v1/'
-        self.oauth_token = ouath_token
+
+        if oauth_token is None:
+            input_oauth = input('Please, type in your Yandex.Toloka token: ')
+            self.oauth_token = input_oauth
+        else:
+            self.oauth_token = oauth_token
         self.headers = {"Authorization": "OAuth " + self.oauth_token}
+
         if project_id is not None:
             self.project_id = project_id
         else:
@@ -49,15 +56,6 @@ class TolokaProjectHandler:
                     self.project_id = self.create_toloka_project(project_params_data)
                     flag = False
 
-    def print_json(self, item, indent=4):
-        """
-        Pretty-prints the mutable item
-
-        :param item: mutable item to print
-        :param indent: indentation for print
-        """
-        print(json.dumps(item, indent=indent, ensure_ascii=False))
-
     def create_toloka_project(self, project_params_data=json_data['validating_segmentation']):
         """
         Creates Toloka project by configuration in a given json-like data
@@ -69,7 +67,7 @@ class TolokaProjectHandler:
         assert response.ok
         new_project_id = response.json()['id']
         if self.verbose:
-            self.print_json(response.json())
+            print_json(response.json())
         print("New project was created. New project id: ", new_project_id)
         output_url = 'https://sandbox.toloka.yandex.ru/requester/project/{}' if self.sandbox \
             else 'https://toloka.yandex.ru/requester/project/{}'
@@ -98,7 +96,7 @@ class TolokaProjectHandler:
         if self.verbose:
             print(response)
         if response.ok:
-            self.print_json(response.json())
+            print_json(response.json())
         return response.json()
 
     def create_toloka_pool(self, pool_from_json_data=None, **kwargs):
@@ -119,7 +117,7 @@ class TolokaProjectHandler:
         response = requests.post(self.url + 'pools', headers=self.headers, json=pool_params)
         if self.verbose:
             print(response)
-            self.print_json(response.json())
+            print_json(response.json())
         new_pool_id = response.json()['id']
         print("New pool was created. New pool id: ", new_pool_id)
         output_url = 'https://sandbox.toloka.yandex.ru/requester/pool/{}' if self.sandbox \
@@ -157,7 +155,7 @@ class TolokaProjectHandler:
         if pool_id is not None:
             response = requests.get(self.url + f'pools/{pool_id}', headers=self.headers)
             if self.verbose:
-                self.print_json(response.json())
+                print_json(response.json())
             return response.json()
         else:
             response = requests.get(self.url + 'pools?limit=300&sort=id', headers=self.headers)
@@ -176,7 +174,7 @@ class TolokaProjectHandler:
                         else:
                             if 'archive' not in item['Pool status'].lower():
                                 final_print.append(item)
-                    self.print_json(final_print)
+                    print_json(final_print)
                     return final_print
                 else:
                     to_print = []
@@ -187,7 +185,7 @@ class TolokaProjectHandler:
                         else:
                             if 'archive' not in item['status'].lower():
                                 to_print.append(item)
-                    self.print_json(to_print)
+                    print_json(to_print)
                     return to_print
 
     def open_close_pool(self, pool_id):
@@ -207,7 +205,7 @@ class TolokaProjectHandler:
             print(f'Pool {pool_id} | Operation {req_type.upper()} successfully done')
         try:
             if self.verbose:
-                self.print_json(response.json())
+                print_json(response.json())
         except json.decoder.JSONDecodeError:
             print(f'Most likely, operation {req_type.upper()} has already been performed')
 
@@ -233,7 +231,7 @@ class TolokaProjectHandler:
                                      json=object_creator)
             if self.verbose:
                 print(response)
-                self.print_json(response.json())
+                print_json(response.json())
             if response.ok:
                 try:
                     print(f'Task-suite {response.json()["id"]} successfully created')
@@ -263,7 +261,7 @@ class TolokaProjectHandler:
                          } for photo in photos]
         if self.verbose:
             print(f'Photos from {proxy_name} ({len(input_values)} items): ')
-            self.print_json(input_values)
+            print_json(input_values)
         task_id = self.create_task_suite(pool_id, input_values=input_values, tasks_on_suite=tasks_on_suite)
         return task_id
 
@@ -277,7 +275,7 @@ class TolokaProjectHandler:
         response = requests.get(self.url + f'task-suites?pool_id={pool_id}', headers=self.headers)
         print(response)
         if response.ok:
-            self.print_json(response.json())
+            print_json(response.json())
         return response.json()
 
     def archive_object(self, object_type, object_id):
@@ -290,7 +288,7 @@ class TolokaProjectHandler:
         response = requests.post(self.url + f'{object_type}s/{object_id}/archive', headers=self.headers)
         if self.verbose:
             print(response)
-            self.print_json(response.json())
+            print_json(response.json())
         if response.ok:
             print(f'Your object: {object_type}-{object_id} successfully archived')
         elif response.status_code == 409:
@@ -318,7 +316,7 @@ class TolokaProjectHandler:
         response = requests.patch(self.url + f'task-suites/{task_suite_id}', json=js, headers=self.headers)
         if self.verbose:
             print(response)
-            self.print_json(response.json())
+            print_json(response.json())
         print(f'Overlap in task-suite {task_suite_id} successfully changed')
 
     def stop_showing_task_suite(self, task_suite_id):
@@ -331,7 +329,7 @@ class TolokaProjectHandler:
                              json={'overlap': 0})
         if self.verbose:
             print(response)
-            self.print_json(response.json())
+            print_json(response.json())
         if response.ok:
             print(f'Task-suite {task_suite_id} successfully stopped')
 
@@ -346,7 +344,7 @@ class TolokaProjectHandler:
         if response.ok:
             if self.verbose:
                 print(response)
-                self.print_json(response.json())
+                print_json(response.json())
             return response.json()
 
     def get_files_from_pool(self, pool_id, download_folder_name):
@@ -360,7 +358,7 @@ class TolokaProjectHandler:
         if response.ok:
             if self.verbose:
                 print(response)
-                self.print_json(response.json())
+                print_json(response.json())
             file_ids = [item['id'] for item in response.json()['items']]
             file_names = [item['name'] for item in response.json()['items']]
             unique_file_names = {}
@@ -423,23 +421,10 @@ class TolokaProjectHandler:
             print(f'Assignment {assignment_id} successfully {action}ed')
         else:
             if self.verbose:
-                self.print_json(response.json())
-
-    @staticmethod
-    def write_config_to_json_files(config_data: dict, file_name: str):
-        """
-        Writes the json-like configuration data into a file and stores it in json_files directory
-
-        :param config_data: a json-like dictionary
-        :param file_name: a name of a file to store the configurations in
-        """
-        if file_name is None or file_name[-5:] == '.json':
-            raise ValueError('Please, provide the file_name without specifying the format')
-        with open(f'{path}/{file_name}.json', 'w') as file:
-            json.dump(config_data, file, indent=4)
+                print_json(response.json())
 
 
 if __name__ == '__main__':
     token = 'AQAAAABVFx8TAAIbupmTNSLnLE9ostJWyUWHY-M'
-    handler = TolokaProjectHandler(ouath_token=token, project_id=74935)
-    handler.archive_object('project', 74935)
+    handler = TolokaProjectHandler()
+    # handler.archive_object('project', 74935)

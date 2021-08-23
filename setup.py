@@ -7,7 +7,12 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 DESCRIPTION = 'Python library for hosting and controlling tasks of the Yandex.Toloka service.'
 
-INSTALL_REQUIRES = ['requests>=2.25.1', 'numpy>=1.20.3', 'Pillow>=8.2.0', 'pandas>=1.2.4', ]
+INSTALL_REQUIRES = ['requests>=2.25.1',
+                    'numpy>=1.20.3',
+                    'Pillow>=8.2.0',
+                    'pandas>=1.2.4',
+                    'yadisk>=1.2.14',
+                    'tqdm']
 
 # Reading the contents of the README.md file
 this_directory = os.path.abspath(os.path.dirname(__file__))
@@ -24,7 +29,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(),
-    install_requires= ['requests>=2.25.1', 'numpy>=1.20.3', 'Pillow>=8.2.0', 'pandas>=1.2.4','yadisk>=1.2.14' ],
+    install_requires=INSTALL_REQUIRES,
     keywords=['python'],
     classifiers=[
         "Development Status :: 1 - Planning",
