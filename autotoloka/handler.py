@@ -1,23 +1,23 @@
 import requests
 import json
 import os
+from tqdm import tqdm
 from autotoloka.create_pool import PoolCreator
 from autotoloka.create_task import TaskSuiteCreator
-from autotoloka.utils import get_chunks
+from autotoloka.utils import get_chunks, print_json, check_for_duplicates
 from yadisk import YaDisk
-from autotoloka.json_data import json_data, path
+from autotoloka.json_data import json_data
 
 
 class TolokaProjectHandler:
     """
     Creates a class to handle all Toloka operations
     """
-
-    def __init__(self, ouath_token, project_id=None, is_sandbox=True, verbose=True, project_params_data=None):
+    def __init__(self, oauth_token=None, project_id=None, is_sandbox=True, verbose=True, project_params_data=None):
         """
         Instantiates a TolokaProjectHandler class
 
-        :param ouath_token: Yandex.Toloka token for connecting with the API
+        :param oauth_token: Yandex.Toloka token for connecting with the API
         :param project_id: ID of the project the handler is needed for, if None - various options will be given
         :param is_sandbox: if set to True, then all the operations will be performed in Sandbox Toloka
         :param verbose: if set to True, all response logs will be printed out
@@ -26,8 +26,14 @@ class TolokaProjectHandler:
         self.sandbox = is_sandbox
         self.verbose = verbose
         self.url = 'https://sandbox.toloka.yandex.ru/api/v1/' if is_sandbox else 'https://toloka.yandex.ru/api/v1/'
-        self.oauth_token = ouath_token
+
+        if oauth_token is None:
+            input_oauth = input('Please, type in your Yandex.Toloka token: ')
+            self.oauth_token = input_oauth
+        else:
+            self.oauth_token = oauth_token
         self.headers = {"Authorization": "OAuth " + self.oauth_token}
+
         if project_id is not None:
             self.project_id = project_id
         else:
@@ -49,15 +55,6 @@ class TolokaProjectHandler:
                     self.project_id = self.create_toloka_project(project_params_data)
                     flag = False
 
-    def print_json(self, item, indent=4):
-        """
-        Pretty-prints the mutable item
-
-        :param item: mutable item to print
-        :param indent: indentation for print
-        """
-        print(json.dumps(item, indent=indent, ensure_ascii=False))
-
     def create_toloka_project(self, project_params_data=json_data['validating_segmentation']):
         """
         Creates Toloka project by configuration in a given json-like data
@@ -69,7 +66,7 @@ class TolokaProjectHandler:
         assert response.ok
         new_project_id = response.json()['id']
         if self.verbose:
-            self.print_json(response.json())
+            print_json(response.json())
         print("New project was created. New project id: ", new_project_id)
         output_url = 'https://sandbox.toloka.yandex.ru/requester/project/{}' if self.sandbox \
             else 'https://toloka.yandex.ru/requester/project/{}'
@@ -98,7 +95,7 @@ class TolokaProjectHandler:
         if self.verbose:
             print(response)
         if response.ok:
-            self.print_json(response.json())
+            print_json(response.json())
         return response.json()
 
     def create_toloka_pool(self, pool_from_json_data=None, **kwargs):
@@ -119,7 +116,7 @@ class TolokaProjectHandler:
         response = requests.post(self.url + 'pools', headers=self.headers, json=pool_params)
         if self.verbose:
             print(response)
-            self.print_json(response.json())
+            print_json(response.json())
         new_pool_id = response.json()['id']
         print("New pool was created. New pool id: ", new_pool_id)
         output_url = 'https://sandbox.toloka.yandex.ru/requester/pool/{}' if self.sandbox \
@@ -157,10 +154,14 @@ class TolokaProjectHandler:
         if pool_id is not None:
             response = requests.get(self.url + f'pools/{pool_id}', headers=self.headers)
             if self.verbose:
-                self.print_json(response.json())
+                print_json(response.json())
             return response.json()
         else:
-            response = requests.get(self.url + 'pools?limit=300&sort=id', headers=self.headers)
+            if only_current_project:
+                response = requests.get(self.url + f'pools?limit=300&sort=id&project_id={self.project_id}',
+                                        headers=self.headers)
+            else:
+                response = requests.get(self.url + 'pools?limit=300&sort=id', headers=self.headers)
             if response.ok:
                 output = response.json()['items']
                 if less_info:
@@ -170,24 +171,16 @@ class TolokaProjectHandler:
                                  'Project ID': item["project_id"]} for item in output]
                     final_print = []
                     for item in to_print:
-                        if only_current_project:
-                            if 'archive' not in item['Pool status'].lower() and str(self.project_id) in item['Project ID']:
-                                final_print.append(item)
-                        else:
-                            if 'archive' not in item['Pool status'].lower():
-                                final_print.append(item)
-                    self.print_json(final_print)
+                        if 'archive' not in item['Pool status'].lower():
+                            final_print.append(item)
+                    print_json(final_print)
                     return final_print
                 else:
                     to_print = []
                     for item in output:
-                        if only_current_project:
-                            if 'archive' not in item['status'].lower() and str(self.project_id) in item['project_id']:
-                                to_print.append(item)
-                        else:
-                            if 'archive' not in item['status'].lower():
-                                to_print.append(item)
-                    self.print_json(to_print)
+                        if 'archive' not in item['status'].lower():
+                            to_print.append(item)
+                    print_json(to_print)
                     return to_print
 
     def open_close_pool(self, pool_id):
@@ -207,7 +200,7 @@ class TolokaProjectHandler:
             print(f'Pool {pool_id} | Operation {req_type.upper()} successfully done')
         try:
             if self.verbose:
-                self.print_json(response.json())
+                print_json(response.json())
         except json.decoder.JSONDecodeError:
             print(f'Most likely, operation {req_type.upper()} has already been performed')
 
@@ -233,7 +226,7 @@ class TolokaProjectHandler:
                                      json=object_creator)
             if self.verbose:
                 print(response)
-                self.print_json(response.json())
+                print_json(response.json())
             if response.ok:
                 try:
                     print(f'Task-suite {response.json()["id"]} successfully created')
@@ -263,7 +256,7 @@ class TolokaProjectHandler:
                          } for photo in photos]
         if self.verbose:
             print(f'Photos from {proxy_name} ({len(input_values)} items): ')
-            self.print_json(input_values)
+            print_json(input_values)
         task_id = self.create_task_suite(pool_id, input_values=input_values, tasks_on_suite=tasks_on_suite)
         return task_id
 
@@ -277,7 +270,7 @@ class TolokaProjectHandler:
         response = requests.get(self.url + f'task-suites?pool_id={pool_id}', headers=self.headers)
         print(response)
         if response.ok:
-            self.print_json(response.json())
+            print_json(response.json())
         return response.json()
 
     def archive_object(self, object_type, object_id):
@@ -290,7 +283,7 @@ class TolokaProjectHandler:
         response = requests.post(self.url + f'{object_type}s/{object_id}/archive', headers=self.headers)
         if self.verbose:
             print(response)
-            self.print_json(response.json())
+            print_json(response.json())
         if response.ok:
             print(f'Your object: {object_type}-{object_id} successfully archived')
         elif response.status_code == 409:
@@ -301,6 +294,12 @@ class TolokaProjectHandler:
                         self.open_close_pool(pool['Pool ID'])
                     self.process_all_tasks(pool['Pool ID'], action='accept')
                     self.archive_object('pool', pool['Pool ID'])
+                self.archive_object(object_type, object_id)
+            elif response.json()['code'] == 'SUBMITTED_ASSIGNMENTS_CONFLICT':
+                self.process_all_tasks(object_id, 'accept')
+                self.archive_object(object_type, object_id)
+            elif response.json()['code'] == 'THERE_IS_REJECTED_ASSIGNMENT':
+                self.process_all_tasks(object_id, 'accept')
                 self.archive_object(object_type, object_id)
 
     def change_task_suite_overlap(self, task_suite_id, overlap=None, infinite_overlap=False):
@@ -318,7 +317,7 @@ class TolokaProjectHandler:
         response = requests.patch(self.url + f'task-suites/{task_suite_id}', json=js, headers=self.headers)
         if self.verbose:
             print(response)
-            self.print_json(response.json())
+            print_json(response.json())
         print(f'Overlap in task-suite {task_suite_id} successfully changed')
 
     def stop_showing_task_suite(self, task_suite_id):
@@ -331,7 +330,7 @@ class TolokaProjectHandler:
                              json={'overlap': 0})
         if self.verbose:
             print(response)
-            self.print_json(response.json())
+            print_json(response.json())
         if response.ok:
             print(f'Task-suite {task_suite_id} successfully stopped')
 
@@ -346,32 +345,55 @@ class TolokaProjectHandler:
         if response.ok:
             if self.verbose:
                 print(response)
-                self.print_json(response.json())
+                print_json(response.json())
             return response.json()
 
-    def get_files_from_pool(self, pool_id, download_folder_name):
+    def get_files_from_pool(self, pool_id, download_folder_name, reject_errors=False):
         """
         Downloads all the files from the pool into a folder
 
+        :param reject_errors: reject the task if no photo was uploaded
         :param pool_id: ID of the pool
         :param download_folder_name: name of a directory to download all the files into
+        :return: photo data dictionary {assignment ID: {image ID: str, image name: str, is duplicate: bool}}
         """
-        response = requests.get(self.url + f'attachments?pool_id={pool_id}&limit=100', headers=self.headers)
+        response = requests.get(self.url + f'assignments?pool_id={pool_id}&limit=100', headers=self.headers)
         if response.ok:
             if self.verbose:
                 print(response)
-                self.print_json(response.json())
-            file_ids = [item['id'] for item in response.json()['items']]
-            file_names = [item['name'] for item in response.json()['items']]
+                print_json(response.json())
+            photo_data = {}
+            assignments = response.json()['items']
+            for assignment in assignments:
+                output_values = assignment['solutions'][0]['output_values']
+                if output_values['no_image']:
+                    photo_data[assignment['id']] = None
+                else:
+                    photo_data[assignment['id']] = {'image_id': output_values['image'],
+                                                    'image_name': None,
+                                                    'is_duplicate': False}
+
+            for key in photo_data:
+                if photo_data.get(key) is None:
+                    if reject_errors:
+                        self.process_task(key, 'reject', 'no photo uploaded')
+                else:
+                    image_response = requests.get(self.url + f'attachments/{photo_data[key]["image_id"]}',
+                                                  headers=self.headers)
+                    photo_data[key]['image_name'] = image_response.json()['name']
+
             unique_file_names = {}
 
             # Making sure that there will be no files with identical names
-            for i, file_name in enumerate(file_names):
-                if file_name[:-4] not in unique_file_names.keys():
-                    unique_file_names[file_name[:-4]] = 1
-                else:
-                    file_names[i] = f'{file_name[:-4]}_{unique_file_names[file_name[:-4]] + 1}.jpg'
-                    unique_file_names[file_name[:-4]] += 1
+            for key in photo_data:
+                if photo_data[key] is not None:
+                    file_name = photo_data[key]['image_name']
+                    if file_name[:-4] not in unique_file_names.keys():
+                        unique_file_names[file_name[:-4]] = 1
+                    else:
+                        new_file_name = f'{file_name[:-4]}_{unique_file_names[file_name[:-4]] + 1}.jpg'
+                        photo_data[key]['image_name'] = new_file_name
+                        unique_file_names[file_name[:-4]] += 1
 
             download_path = os.path.join(os.getcwd(), download_folder_name)
 
@@ -380,14 +402,19 @@ class TolokaProjectHandler:
                 print(f'Directory {download_folder_name} created')
 
             print('Downloading files ... ')
-            counter = 0
-            for id in tqdm(file_ids, ncols=100, colour='green', desc='Images downloaded'):
-                download = requests.get(self.url + f'attachments/{id}/download', headers=self.headers)
-                with open(os.path.join(download_path, file_names[counter]), 'wb') as file:
-                    file.write(download.content)
-                counter += 1
+
+            for key in tqdm(photo_data, ncols=100, colour='green', desc='Photo data processed'):
+                if photo_data[key] is not None:
+                    file_id = photo_data[key]['image_id']
+                    download = requests.get(self.url + f'attachments/{file_id}/download', headers=self.headers)
+                    with open(os.path.join(download_path, photo_data[key]["image_name"]), 'wb') as file:
+                        file.write(download.content)
+
 
             print(f'All files from pool-{pool_id} successfully downloaded into {download_path}')
+            if self.verbose:
+                print_json(photo_data)
+            return photo_data
 
     def process_all_tasks(self, pool_id, action='accept'):
         """
@@ -406,40 +433,56 @@ class TolokaProjectHandler:
                 if assignment_statuses[i] == 'REJECTED' and action == 'accept':
                     self.process_task(assignment_id, action)
 
-    def process_task(self, assignment_id, action='accept'):
+    def process_task(self, assignment_id, action='accept', public_comment='generic comment'):
         """
         Processes the assignment by its ID, accepting or rejecting it
 
+        :param public_comment: public comment for the user whose task is accepted/rejected
         :param action: either 'accept' or 'reject'
         :param assignment_id: ID of the assignment
         """
         assignment_options = {'accept': {'status': 'ACCEPTED',
-                                         'public_comment': 'Well done, dude!'},
+                                         'public_comment': public_comment},
                               'reject': {'status': 'REJECTED',
-                                         'public_comment': 'Sorry, bro!'}}
+                                         'public_comment': public_comment}}
         patch_params = assignment_options[action]
         response = requests.patch(self.url + f'assignments/{assignment_id}', headers=self.headers, json=patch_params)
         if response.ok:
-            print(f'Assignment {assignment_id} successfully {action}ed')
+            print(f'Assignment {assignment_id} successfully {action}ed with public comment: {public_comment}')
+        elif response.status_code == 409 and response.json()['code'] == 'INAPPROPRIATE_STATUS':
+            print(f'Probably, the assignment {assignment_id} has already been {action}ed')
         else:
             if self.verbose:
-                self.print_json(response.json())
+                print(response)
+                print_json(response.json())
 
-    @staticmethod
-    def write_config_to_json_files(config_data: dict, file_name: str):
+    def check_photos_for_duplicates(self, image_folder, reject_duplicates=False,
+                                    accept_uniques=False, photo_data=None):
         """
-        Writes the json-like configuration data into a file and stores it in json_files directory
+        Checks uploaded photos for duplicates and processes tasks based on the CNN results
 
-        :param config_data: a json-like dictionary
-        :param file_name: a name of a file to store the configurations in
+        :param image_folder: folder where uploaded images are stored
+        :param reject_duplicates: if set to True, rejects tasks where duplicates were provided
+        :param accept_uniques: if set to True, accepts tasks with uniques
+        :param photo_data: photo data dictionary from get_files_from_pool function
         """
-        if file_name is None or file_name[-5:] == '.json':
-            raise ValueError('Please, provide the file_name without specifying the format')
-        with open(f'{path}/{file_name}.json', 'w') as file:
-            json.dump(config_data, file, indent=4)
+        print('Checking for duplicates ...')
+        images_to_reject = check_for_duplicates(image_folder)
+        if self.verbose:
+            print_json(images_to_reject)
+        for key in photo_data:
+            if photo_data[key] is not None:
+                if photo_data[key]['image_name'] in images_to_reject:
+                    if reject_duplicates:
+                        photo_data[key]['is_duplicate'] = True
+                        comment = "It seems that this image's duplicate has already been provided by someone else"
+                        self.process_task(key, action='reject', public_comment=comment)
+                else:
+                    if accept_uniques:
+                        self.process_task(key, 'accept', 'Well done!')
+            if self.verbose:
+                print_json(photo_data)
 
 
 if __name__ == '__main__':
     token = 'AQAAAABVFx8TAAIbupmTNSLnLE9ostJWyUWHY-M'
-    handler = TolokaProjectHandler(ouath_token=token, project_id=74935)
-    handler.archive_object('project', 74935)

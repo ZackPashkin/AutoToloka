@@ -54,14 +54,18 @@ def pipeline_for_new_project(oauth_token, project_params_path, verbose=True):
     handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_data=project_params_path)
 
 
-def pipeline_for_collecting_images(project_name="Let's collect some photos!", pool_name="Collecting images",
+def pipeline_for_collecting_images(connect_to_existing_project=False, project_id=None,
+                                   project_name="Let's collect some photos!", pool_name="Collecting images",
                                    number_of_images=5, general_description='Just choose some photo and upload it!',
                                    general_title='Photo to choose', progress_bar_length=60,
-                                   oauth_token='AQAAAABVFx8TAAIbupmTNSLnLE9ostJWyUWHY-M',
-                                   download_folder_name='photos', verbose=False):
+                                   oauth_token=None, download_folder_name='photos', verbose=False,
+                                   check_for_duplicates=True, accept_and_reject_after_dedup=False,
+                                   reject_errors=False):
     """
     Pipeline for collecting photos by Tolokers
 
+    :param connect_to_existing_project: if set to True, connects to existing project
+    :param project_id: ID of the project
     :param project_name: desired name of the new project
     :param pool_name: desired name of the new pool
     :param number_of_images: number of images to collect
@@ -71,11 +75,17 @@ def pipeline_for_collecting_images(project_name="Let's collect some photos!", po
     :param oauth_token: token for connecting to Toloka API
     :param download_folder_name: name of a directory to download images to
     :param verbose: if set to True, prints out all the possible logs into the console
+    :param check_for_duplicates: checks downloaded photos for duplicates
+    :param accept_and_reject_after_dedup: processes tasks based on the results of deduplication
+    :param reject_errors: if set to True, rejects task if a photo wasn't uploaded by the user
     """
-    collect_photos_config = json_data['collecting_images']
-    collect_photos_config['public_name'] = project_name
-    handler = TolokaProjectHandler(oauth_token, verbose=verbose, project_params_data=collect_photos_config)
-    project_id = handler.project_id
+    if connect_to_existing_project:
+        handler = TolokaProjectHandler(oauth_token=oauth_token, project_id=project_id)
+    else:
+        collect_photos_config = json_data['collecting_images']
+        collect_photos_config['public_name'] = project_name
+        handler = TolokaProjectHandler(oauth_token=oauth_token, verbose=verbose,
+                                       project_params_data=collect_photos_config)
 
     pool_id = handler.create_toloka_pool(private_name=pool_name)
     input_values = [{'product_title': general_title,
@@ -99,4 +109,19 @@ def pipeline_for_collecting_images(project_name="Let's collect some photos!", po
                                                               '-' * bar_step * (len(input_values) - counter)))
         stdout.flush()
     print('')
-    handler.get_files_from_pool(pool_id, download_folder_name)
+    photo_data = handler.get_files_from_pool(pool_id, download_folder_name, reject_errors=reject_errors)
+    if check_for_duplicates:
+        handler.check_photos_for_duplicates(download_folder_name,
+                                            reject_duplicates=accept_and_reject_after_dedup,
+                                            photo_data=photo_data,
+                                            accept_uniques=accept_and_reject_after_dedup)
+
+
+if __name__ == '__main__':
+    number_of_images, token, verbose = 10, 'AQAAAABVFx8TAAIbupmTNSLnLE9ostJWyUWHY-M', False
+    pipeline_for_collecting_images(number_of_images=number_of_images,
+                                   oauth_token=token,
+                                   verbose=verbose,
+                                   check_for_duplicates=True,
+                                   accept_and_reject_after_dedup=True,
+                                   reject_errors=True)
