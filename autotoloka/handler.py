@@ -402,12 +402,14 @@ class TolokaProjectHandler:
                 print(f'Directory {download_folder_name} created')
 
             print('Downloading files ... ')
+
             for key in tqdm(photo_data, ncols=100, colour='green', desc='Photo data processed'):
                 if photo_data[key] is not None:
                     file_id = photo_data[key]['image_id']
                     download = requests.get(self.url + f'attachments/{file_id}/download', headers=self.headers)
                     with open(os.path.join(download_path, photo_data[key]["image_name"]), 'wb') as file:
                         file.write(download.content)
+
 
             print(f'All files from pool-{pool_id} successfully downloaded into {download_path}')
             if self.verbose:
@@ -484,6 +486,3 @@ class TolokaProjectHandler:
 
 if __name__ == '__main__':
     token = 'AQAAAABVFx8TAAIbupmTNSLnLE9ostJWyUWHY-M'
-    handler = TolokaProjectHandler(oauth_token=token, project_id=75025)
-    pool_id = 965046
-    handler.archive_object('project', 75025)
