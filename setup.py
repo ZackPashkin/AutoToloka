@@ -23,7 +23,7 @@ with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as file:
 # Setting up
 setup(
     name="autotoloka",
-    version='0.0.19',
+    version='0.0.20',
     author="eftblack, barkev2009",
     author_email="justlittlemin@gmail.com, barkev2009@bk.ru",
     description=DESCRIPTION,
