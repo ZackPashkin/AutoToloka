@@ -9,7 +9,7 @@ DESCRIPTION = 'Python library for hosting and controlling tasks of the Yandex.To
 
 INSTALL_REQUIRES = ['requests==2.25.1',
                     'numpy==1.20.3',
-                    'Pillow==8.3.2',
+                    'Pillow==9.3.0',
                     'pandas==1.2.4',
                     'yadisk==1.2.14',
                     'imagededup==0.0.2',
